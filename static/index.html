@@ -1,0 +1,1346 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sicuritalia · Sales Opportunity Hub</title>
+<meta name="theme-color" content="#f5f5f7">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="description" content="Gestione opportunità di vendita, agenda appuntamenti e SLA per la rete commerciale">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Opportunity Hub">
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--mut:#6e6e73;--line:rgba(0,0,0,.08);--pri:#0071e3;--pri-d:#0062c4;--tint:rgba(0,113,227,.1);
+--ok:#248a3d;--ko:#d70015;--warn:#b25000;--info:#0a84a8;--viol:#8944ab;--r:18px;--sh:0 1px 2px rgba(0,0,0,.04),0 8px 28px rgba(0,0,0,.05);
+--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;color:var(--ink);font:15px/1.5 var(--font);letter-spacing:-.011em;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+h1,h2,h3{margin:0 0 .5rem;font-weight:700;letter-spacing:-.022em}h2{font-size:1.85rem;line-height:1.15;margin-bottom:1rem}h3{font-size:1.1rem;font-weight:650}
+a{color:var(--pri)}
+:focus-visible{outline:3px solid rgba(0,113,227,.45);outline-offset:2px;border-radius:10px}
+.hide{display:none!important}
+/* chat */
+.chatbox{background:var(--bg);border-radius:20px;padding:12px;max-height:min(75vh,640px);overflow:auto;margin-bottom:10px}
+.bub{max-width:96%;padding:9px 14px;border-radius:20px;margin:6px 0;font-size:14.5px}
+.bub.bot{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06);border-bottom-left-radius:6px}
+.bub.me{background:var(--pri);color:#fff;margin-left:auto;white-space:pre-wrap;border-bottom-right-radius:6px}
+/* cards */
+.card{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh)}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:980px;padding:9px 18px;cursor:pointer;font-weight:600;transition:background .15s,transform .1s}
+.btn:hover{background:var(--pri-d)}.btn:active{transform:scale(.97)}
+.btn.sec{background:var(--tint);color:var(--pri);border:0}.btn.sec:hover{background:rgba(0,113,227,.18)}
+.btn.ok{background:#34c759;color:#fff}.btn.ok:hover{background:#2db34f}.btn.ko{background:#ff3b30}.btn.ko:hover{background:#e0342a}.btn.warn{background:#ff9500}.btn.warn:hover{background:#e08400}
+.btn.sm{padding:5px 13px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+input,select,textarea{border:1px solid rgba(0,0,0,.14);border-radius:12px;padding:9px 12px;background:#fff;max-width:100%;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--pri);box-shadow:0 0 0 4px rgba(0,113,227,.2)}
+input[type=checkbox]{accent-color:var(--pri);width:17px;height:17px}
+textarea{width:100%;min-height:70px}
+label{display:block;font-size:13px;font-weight:500;color:var(--mut);margin:10px 0 4px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}.row>*{flex:0 1 auto}
+.grow{flex:1 1 200px!important}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-size:12.5px;font-weight:600;color:var(--mut)}
+.tw{overflow-x:auto}
+tr.click{cursor:pointer;transition:background .12s}tr.click:hover{background:rgba(0,113,227,.06)}
+.dup{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;background:#fff4e0;color:#a15c00;border:1px solid #f5d79e;max-width:100%}
+.dup.certo{background:#ffe9e7;color:#b3261e;border-color:#f3b8b3}
+.rowdup{background:#fff8ec}
+.rowdup.certo{background:#fff1f0}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:rgba(0,0,0,.06);color:#48484a;white-space:nowrap}
+.b-da_gestire{background:rgba(255,149,0,.16);color:#9a5300}.b-appuntamento{background:rgba(50,173,230,.16);color:#00678f}
+.b-in_lavorazione{background:rgba(0,122,255,.13);color:#0a5bc4}.b-preventivo{background:rgba(255,204,0,.22);color:#8a6400}.pvrow{border:1px solid #e5e5ea;border-radius:12px;padding:10px;margin:8px 0;background:#fafafc}
+.b-da_riprogrammare{background:rgba(175,82,222,.14);color:#7d3a9e}.b-contratto{background:rgba(52,199,89,.18);color:#1a7a35}.b-ko{background:rgba(255,59,48,.14);color:#c4160b}
+.b-scad{background:rgba(255,59,48,.14);color:#c4160b}
+.mut{color:var(--mut)}.small{font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi.clk{cursor:pointer;transition:transform .12s}.kpi.clk:hover{transform:translateY(-2px)}
+.kpi{background:var(--card);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.kpi b{display:block;font-size:34px;line-height:1.05;font-weight:700;letter-spacing:-.03em}.kpi span{font-size:13px;color:var(--mut);font-weight:500}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.bar{height:8px;background:rgba(0,0,0,.07);border-radius:99px;overflow:hidden;display:flex;min-width:80px}.bar i{display:block;height:100%}
+/* shell */
+#app{display:flex;min-height:100vh}
+nav{width:236px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);color:var(--ink);padding:18px 12px;flex:none;position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line)}
+nav .brand{font-weight:700;font-size:16px;padding:4px 10px 14px}
+nav a{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:12px;color:#3a3a3c;text-decoration:none;cursor:pointer;margin-bottom:2px;font-weight:500;transition:background .12s}
+nav a>span:first-child{display:flex;align-items:center;gap:11px}
+nav a svg{width:21px;height:21px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav a:hover{background:rgba(0,0,0,.05)}nav a.on{background:var(--tint);color:var(--pri);font-weight:600}
+nav .pill{background:#ff3b30;color:#fff;border-radius:99px;font-size:11px;font-weight:600;padding:1px 7px}
+main{flex:1;min-width:0;padding:22px 28px 90px;max-width:1280px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+main>.top{position:sticky;top:0;z-index:10;margin:-22px -28px 18px;padding:12px 28px;background:rgba(245,245,247,.78);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+.who{font-size:13.5px;color:var(--mut)}.who b{color:var(--ink)}
+@media(max-width:760px){
+ #app{flex-direction:column}
+ nav{width:100%;height:auto;position:fixed;bottom:0;left:0;right:0;top:auto;z-index:20;display:flex;gap:0;padding:6px 4px calc(6px + env(safe-area-inset-bottom));overflow-x:auto;border-top:1px solid var(--line);border-right:0;background:rgba(250,250,252,.86)}
+ nav .navlogo{display:none}nav a{flex:0 0 auto;font-size:10.5px;padding:5px 12px;margin:0;border-radius:10px;min-width:64px}
+ nav a>span:first-child{flex-direction:column;gap:2px}nav a.on{background:transparent}
+ main{padding:14px 14px 96px}main>.top{margin:-14px -14px 14px;padding:10px 14px}
+ h2{font-size:1.55rem}.kpi b{font-size:28px}
+}
+/* logo */
+.logo{display:block;height:auto}
+.navlogo{padding:4px 6px;margin:2px 0 18px}
+.navlogo img{width:100%;max-width:180px;margin:0 auto 0 4px;mix-blend-mode:multiply}
+.toplogo{height:28px;width:auto;mix-blend-mode:multiply}
+.toplogo-m{display:none}
+.loginlogo{width:100%;max-width:260px;margin:0 auto 18px;mix-blend-mode:multiply}
+.foot{margin-top:30px;text-align:center;opacity:.8}.foot img{height:24px;width:auto;display:inline-block;mix-blend-mode:multiply}
+@media(max-width:760px){.toplogo-m{display:block}.foot{margin-bottom:10px}}
+/* organigramma, tendine, zone */
+.orgn{margin:8px 0}.orgc{border-radius:14px;padding:10px 14px;background:#fff;box-shadow:0 0 0 1px var(--line),0 2px 8px rgba(0,0,0,.03);border-left:5px solid var(--pri)}
+.orgn.r-direttore>.orgc{border-left-color:#1d1d1f}.orgn.r-district>.orgc{border-left-color:#af52de}.orgn.r-team_leader>.orgc{border-left-color:#32ade6}
+.orgn.r-agente>.orgc{border-left-color:#34c759}.orgn.r-recuperatore>.orgc{border-left-color:#ff9500}
+.orgch{margin-left:16px;padding-left:14px;border-left:2px solid var(--line)}
+.chip{display:inline-block;background:rgba(0,0,0,.06);color:#48484a;border-radius:7px;padding:0 7px;font-size:11px;font-weight:600;margin-left:3px}
+details.dd{border-radius:14px;background:#fff;margin:8px 0;box-shadow:0 0 0 1px var(--line)}
+details.dd>summary{padding:11px 14px;cursor:pointer;font-weight:600;list-style:none}
+details.dd>summary::-webkit-details-marker{display:none}details.dd>summary::after{content:"▾";float:right;color:var(--mut)}
+details.dd[open]>summary::after{content:"▴"}
+.ddb{padding:4px 14px 12px;max-height:320px;overflow:auto;border-top:1px solid var(--line)}
+.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0 12px}
+/* modal */
+.leaflet-container,#mapc{isolation:isolate;z-index:0}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.32);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto;z-index:3000;animation:fadein .18s ease-out}
+.modal{background:#fff;border-radius:24px;max-width:720px;width:100%;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.25);animation:pop .22s cubic-bezier(.2,.9,.3,1.1)}
+.modal h2{display:flex;justify-content:space-between;gap:10px;font-size:1.5rem}
+@keyframes fadein{from{opacity:0}to{opacity:1}}@keyframes pop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+.x{background:rgba(0,0,0,.06);border:0;width:30px;height:30px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer;color:var(--mut);flex:none}.x:hover{background:rgba(0,0,0,.1)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:rgba(29,29,31,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;padding:11px 20px;border-radius:980px;z-index:3100;max-width:90vw;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:pop .22s ease-out}
+.toast.e{background:rgba(215,0,21,.94)}
+.login{max-width:400px;margin:11vh auto;padding:0 16px}
+.login .card{padding:32px 28px;border-radius:28px;box-shadow:0 2px 4px rgba(0,0,0,.04),0 24px 60px rgba(0,0,0,.09)}
+.login h2{text-align:center;font-size:1.7rem}
+.login .btn{width:100%;padding:12px;font-size:16px}
+html{background:linear-gradient(180deg,#fbfbfd 0,#f5f5f7 340px) no-repeat,#f5f5f7}body{background:transparent}
+.ev{border-left:3px solid rgba(0,113,227,.25);padding:2px 0 2px 12px;margin:8px 0}
+.perm{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center}
+.chk{display:flex;gap:9px;align-items:center;margin:4px 0;font-size:14px;color:var(--ink);font-weight:400}
+.day{margin-bottom:14px}.day h3{display:flex;justify-content:space-between}
+.loc{font-size:13px;font-weight:600;color:var(--mut);margin:10px 0 3px}
+.item{display:flex;justify-content:space-between;gap:8px;padding:10px 14px;border-radius:14px;margin-bottom:6px;cursor:pointer;background:#fff;box-shadow:0 0 0 1px var(--line);transition:background .12s,transform .1s}
+.item:hover{background:rgba(0,113,227,.05)}.item:active{transform:scale(.99)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+"use strict";
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const S={me:null,perm:new Set(),meta:null,agenti:[],page:null,unread:0};
+const STATO={da_gestire:"Da gestire",in_lavorazione:"In lavorazione",preventivo:"Preventivo inviato",appuntamento:"Appuntamento",da_riprogrammare:"Da riprogrammare",contratto:"Contratto",ko:"KO"};
+const CAT={customer_base:"Customer base",prospect:"Prospect",disdetta:"Disdette"};
+const SOTTO={lead:"Lead",nuova_nata:"Nuova nata",lead_prospect:"Lead prospect"};
+const REG={colonna_agente:"Colonna «Agente» del file",territorio:"Per territorio dell'agente",round_robin:"Ripartizione equa per carico",non_assegnare:"Non assegnare (lo fa il direttore)"};
+const GIORNI=["dom","lun","mar","mer","gio","ven","sab"];
+
+window.addEventListener("error",e=>{try{toast("Errore: "+(e.message||"sconosciuto")+" ("+(e.lineno||"?")+")",1)}catch(_){}});
+window.addEventListener("unhandledrejection",e=>{try{toast("Errore: "+((e.reason&&e.reason.message)||e.reason),1)}catch(_){}});
+async function api(path,opt={}){
+  const o={method:opt.method||"GET",headers:{"X-Requested-With":"SOH"},credentials:"same-origin"};
+  if(opt.json!==undefined){o.headers["Content-Type"]="application/json";o.body=JSON.stringify(opt.json);o.method=opt.method||"POST"}
+  if(opt.form){o.body=opt.form;o.method="POST"}
+  const r=await fetch("/api"+path,o);
+  if(opt.raw)return r;
+  let d={};try{d=await r.json()}catch(e){}
+  if(!r.ok){const e=new Error(d.error||("Errore "+r.status));e.status=r.status;e.data=d;throw e}
+  return d;
+}
+function toast(m,err){const t=document.createElement("div");t.className="toast"+(err?" e":"");t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3800)}
+function fmtDT(s){if(!s)return"";const d=new Date(s.replace(" ","T"));return d.toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
+function fmtD(s){const d=new Date(s+"T12:00:00");return GIORNI[d.getDay()]+" "+d.toLocaleDateString("it-IT",{day:"2-digit",month:"long"})}
+const ESCH={parlato:"Ho parlato con il cliente",non_risponde:"Non risponde",da_richiamare:"Da richiamare",numero_errato:"Numero errato / non raggiungibile",rifiuta:"Il cliente rifiuta"};
+const MOTNR={scadenza_naturale:"Portata a naturale scadenza",con_penali:"Con applicazione penali",senza_penali:"Senza applicazione penali",non_lavorabile:"Non lavorabile"};
+const eur=v=>(v==null?"–":Number(v).toLocaleString("it-IT",{style:"currency",currency:"EUR"}));
+const badge=(s,o)=>{const dis=o&&o.categoria==="disdetta"&&(s==="contratto"||s==="ko");return `<span class="badge b-${s}">${dis?(s==="contratto"?"Recuperata":"Non recuperata"):(STATO[s]||s)}${o&&o.con_preventivo&&s==="appuntamento"?" · preventivo":""}</span>`};
+function sla(o){if(o.stato!=="da_gestire"||o.ore_residue==null)return"";
+  if(o.scaduta)return `<span class="badge b-scad">SLA scaduto</span>`;
+  return `<span class="small mut">${o.ore_residue<48?Math.max(0,Math.round(o.ore_residue))+"h":Math.round(o.ore_residue/24)+"g"} all'SLA</span>`}
+const can=f=>S.perm.has(f);
+function modal(html,wide){
+  const m=document.createElement("div");m.className="mask";
+  m.innerHTML=`<div class="modal" ${wide?'style="max-width:920px"':""}>${html}</div>`;
+  m.addEventListener("mousedown",e=>{if(e.target===m)m.remove()});
+  document.body.appendChild(m);
+  m.close=()=>m.remove();m.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>m.remove());
+  return m;
+}
+const closeBtn='<button class="x" data-x>&times;</button>';
+
+/* ------------------------------------------------ grafici SVG */
+function lineChart(data,series,h=190){
+  const W=640,P={l:30,r:8,t:10,b:22};const n=data.length;
+  const max=Math.max(1,...data.flatMap(d=>series.map(s=>d[s.k])));
+  const x=i=>P.l+(W-P.l-P.r)*i/(n-1||1),y=v=>P.t+(h-P.t-P.b)*(1-v/max);
+  let g="";
+  for(let t=0;t<=4;t++){const v=Math.round(max*t/4);g+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#e3e7ef"/><text x="${P.l-5}" y="${y(v)+4}" font-size="10" text-anchor="end" fill="#6b7488">${v}</text>`}
+  const st=Math.max(2,Math.ceil(n/10));data.forEach((d,i)=>{if(i%st===0||(i===n-1&&(n-1)%st>=Math.ceil(st/2)))g+=`<text x="${x(i)}" y="${h-6}" font-size="10" text-anchor="middle" fill="#6b7488">${d.data.slice(8)}/${d.data.slice(5,7)}</text>`});
+  series.forEach(s=>{const pts=data.map((d,i)=>`${x(i)},${y(d[s.k])}`).join(" ");
+    g+=`<polyline fill="none" stroke="${s.c}" stroke-width="2.5" points="${pts}"/>`;
+    data.forEach((d,i)=>g+=`<circle cx="${x(i)}" cy="${y(d[s.k])}" r="${n>40?2:3}" fill="${s.c}"><title>${d.data}: ${s.l} ${d[s.k]}</title></circle>`)});
+  return `<svg viewBox="0 0 ${W} ${h}" width="100%" role="img">${g}</svg><div class="small">${series.map(s=>`<span style="color:${s.c}">●</span> ${s.l}`).join(" &nbsp; ")}</div>`;
+}
+function colChart(labels,series,fmt=v=>v,h=210){
+  const W=520,pl=44,pb=26,pt=14,max=Math.max(1,...series.flatMap(s=>s.vals)),top=(()=>{const m=Math.pow(10,Math.floor(Math.log10(max)));return Math.ceil(max/m*2)/2*m||1})();
+  const iw=W-pl-8,ih=h-pb-pt,g=iw/labels.length,bw=Math.min(34,(g-14)/series.length);
+  let o=`<svg viewBox="0 0 ${W} ${h}" style="width:100%;height:auto" role="img">`;
+  for(let k=0;k<=4;k++){const y=pt+ih-ih*k/4;o+=`<line x1="${pl}" x2="${W-8}" y1="${y}" y2="${y}" stroke="#e5e5ea"/><text x="${pl-6}" y="${y+3}" text-anchor="end" font-size="9" fill="#86868b">${fmt(Math.round(top*k/4*10)/10)}</text>`}
+  labels.forEach((l,i)=>{const x0=pl+g*i+(g-bw*series.length)/2;series.forEach((s,j)=>{const v=s.vals[i],bh=ih*v/top;o+=`<rect x="${x0+bw*j}" y="${pt+ih-bh}" width="${bw-3}" height="${Math.max(bh,v?1:0)}" rx="3" fill="${s.c}"><title>${s.l}: ${fmt(v)}</title></rect>${v?`<text x="${x0+bw*j+(bw-3)/2}" y="${pt+ih-bh-3}" text-anchor="middle" font-size="9" fill="#444">${fmt(v)}</text>`:""}`});
+    o+=`<text x="${pl+g*i+g/2}" y="${h-8}" text-anchor="middle" font-size="10" fill="#6e6e73">${l}</text>`});
+  return o+`</svg><div class="row small" style="gap:12px;margin-top:2px">${series.map(s=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${s.c};margin-right:4px"></i>${s.l}</span>`).join("")}</div>`}
+function donut(parts,total,label){
+  const R=54,C=2*Math.PI*R;let off=0,g="";
+  parts.forEach(p=>{const l=total?C*p.v/total:0;g+=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${p.c}" stroke-width="22" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"><title>${p.l}: ${p.v}</title></circle>`;off+=l});
+  return `<div class="row" style="align-items:center"><svg viewBox="0 0 140 140" width="140" height="140">${g}<text x="70" y="68" text-anchor="middle" font-size="24" font-weight="700">${total}</text><text x="70" y="86" text-anchor="middle" font-size="10" fill="#6b7488">${label}</text></svg>
+  <div class="small">${parts.map(p=>`<div><span style="color:${p.c}">●</span> ${p.l}: <b>${p.v}</b></div>`).join("")}</div></div>`;
+}
+function stackBar(parts,total){return `<div class="bar">${parts.map(p=>`<i style="width:${total?100*p.v/total:0}%;background:${p.c}" title="${p.l}: ${p.v}"></i>`).join("")}</div>`}
+
+/* ------------------------------------------------ avvio / login */
+async function boot(){
+  try{const d=await api("/me");await afterLogin(d)}catch(e){showLogin()}
+}
+function showLogin(msg){
+  $("#root").innerHTML=`<div class="login"><div class="card"><img class="logo loginlogo" src="/static/logo.png" alt="Sicuritalia"><h2 style="text-align:center">Sales Opportunity Hub</h2><p class="mut small">Accedi con le tue credenziali.</p>
+  <form id="lf"><label>Utente</label><input id="u" autocomplete="username" required style="width:100%">
+  <label>Password</label><input id="p" type="password" autocomplete="current-password" required style="width:100%">
+  <p style="margin-top:14px"><button class="btn" style="width:100%">Accedi</button></p><div id="le" class="small" style="color:var(--ko)">${esc(msg||"")}</div></form></div></div>`;
+  $("#lf").onsubmit=async e=>{e.preventDefault();try{const d=await api("/login",{json:{username:$("#u").value,password:$("#p").value}});await afterLogin(d)}catch(x){$("#le").textContent=x.message}};
+}
+async function afterLogin(d){
+  S.me=d.user;S.perm=new Set(d.permessi);S.unread=d.non_lette;
+  if(S.me.must_change)return showChangePw();
+  S.meta=await api("/meta");
+  try{S.agenti=await api("/agenti")}catch(e){S.agenti=[]}
+  shell();
+}
+function showChangePw(){
+  $("#root").innerHTML=`<div class="login"><div class="card"><img class="logo loginlogo" src="/static/logo.png" alt="Sicuritalia"><h2>Imposta una nuova password</h2><p class="mut small">Per sicurezza devi cambiare la password prima di continuare (minimo 8 caratteri).</p>
+  <form id="pf"><label>Password attuale</label><input id="a" type="password" required style="width:100%"><label>Nuova password</label><input id="n" type="password" minlength="8" required style="width:100%">
+  <p><button class="btn" style="width:100%">Salva</button></p><div id="pe" class="small" style="color:var(--ko)"></div></form></div></div>`;
+  $("#pf").onsubmit=async e=>{e.preventDefault();try{await api("/password",{json:{attuale:$("#a").value,nuova:$("#n").value}});const d=await api("/me");await afterLogin(d)}catch(x){$("#pe").textContent=x.message}};
+}
+const PAGES=[
+ ["dashboard","dashboard","Dashboard","📊",pgDashboard],
+ ["opportunita","opportunita","Opportunità","📋",pgOpps],
+ ["agenda","agenda","Agenda","🗓️",pgAgenda],
+ ["campagne","campagne","Campagne","📥",pgCampagne],
+ ["proposte","proposte","Proposte","💬",pgProposte],
+ ["messaggi","messaggi","Messaggi","📣",pgMessaggi],
+ ["documenti","documenti","Documenti","📁",pgDocumenti],
+ ["verifica","verifica","Verifica clienti","🔎",pgVerifica],
+ ["customerbase","customerbase","Customer base","🗂️",pgCB],
+ ["notifiche","notifiche","Notifiche","🔔",pgNotifiche],
+ ["utenti","utenti","Utenti","👥",pgUtenti],
+ ["organigramma","organigramma","Organigramma","🧭",pgOrg],
+ ["aree","aree","Aree e geografia","🗺️",pgAree],
+ ["impostazioni","impostazioni","Impostazioni","⚙️",pgImpost]];
+const ICONS={
+ dashboard:'<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/>',
+ opportunita:'<rect x="5" y="4" width="14" height="17" rx="3"/><path d="M9 4.5h6M9 10h6M9 14h6M9 18h3"/>',
+ agenda:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+ proposte:'<path d="M20 12a8 7 0 0 1-11.6 6.5L4 20l1.2-3.7A7 7 0 0 1 4 12a8 7 0 0 1 16 0z"/><path d="M9 11.5h6M9 14.5h3.5"/>',
+ campagne:'<path d="M3.5 13.5 6.2 5.8A2 2 0 0 1 8.1 4.5h7.8a2 2 0 0 1 1.9 1.3l2.7 7.7"/><path d="M3.5 13.5v4.2a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-4.2h-5l-1.3 2.2h-4.4L8.5 13.5z"/>',
+ notifiche:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+ utenti:'<circle cx="9" cy="8.5" r="3.5"/><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0"/><path d="M16 5.3a3.5 3.5 0 0 1 0 6.4M18.5 14.4A6.2 6.2 0 0 1 21.2 20"/>',
+ organigramma:'<rect x="9" y="3" width="6" height="5" rx="1.5"/><rect x="3" y="16" width="6" height="5" rx="1.5"/><rect x="15" y="16" width="6" height="5" rx="1.5"/><path d="M12 8v4M6 16v-4h12v4"/>',
+ aree:'<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>',
+ messaggi:'<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4h0A2.5 2.5 0 0 1 4 13.5z"/><path d="M8 9h8M8 12h5"/>',
+ documenti:'<path d="M3.5 7a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>',
+ verifica:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M8 10.5l1.8 1.8L13 9"/>',
+ customerbase:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+ impostazioni:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>'};
+const ico=id=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[id]||""}</svg>`;
+function shell(){
+  const pages=PAGES.filter(p=>can(p[1]));
+  $("#root").innerHTML=`<div id="app"><nav><div class="navlogo"><img class="logo" src="/static/logo.png" alt="Sicuritalia"></div>
+  ${pages.map(p=>`<a data-p="${p[0]}"><span>${ico(p[0])}${p[2]}</span>${p[0]==="notifiche"?`<span class="pill ${S.unread?"":"hide"}" id="unread">${S.unread}</span>`:""}</a>`).join("")}
+  <a id="logout" style="margin-top:14px"><span>⎋ Esci</span></a>${S.me.ruolo==="admin"&&S.meta.locale?'<a id="spegni"><span>⏻ Spegni il programma</span></a>':""}</nav><main><div class="top"><img class="logo toplogo toplogo-m" src="/static/logo.png" alt="Sicuritalia"><div class="who"><b>${esc(S.me.nome)}</b> · ${esc(S.me.ruolo_label)}${S.me.area?" · "+esc(S.me.area):""}</div><div class="row">${can("email")?'<button class="btn sm" id="mailbtn">📧 Carica da email</button>':""}<button class="btn sec sm" id="chpw">Cambia password</button></div></div><div id="page"></div><div class="foot"><img class="logo" src="/static/logo.png" alt="Sicuritalia"><div class="small mut">Sales Opportunity Hub · v3.18</div></div></main></div>`;
+  document.querySelectorAll("nav a[data-p]").forEach(a=>a.onclick=()=>go(a.dataset.p));
+  $("#logout").onclick=async()=>{await api("/logout",{json:{}});S.me=null;showLogin()};
+  if($("#spegni"))$("#spegni").onclick=async()=>{if(!confirm("Spegnere il programma? Per riaprirlo usa il collegamento sul Desktop."))return;
+    try{await api("/spegni",{json:{}})}catch(e){}document.body.innerHTML='<div class="login"><div class="card"><h2>Programma spento</h2><p>Puoi chiudere questa scheda. Per riaprirlo usa il collegamento «Sicuritalia Opportunity Hub» sul Desktop.</p></div></div>'};
+  if($("#mailbtn"))$("#mailbtn").onclick=emailImport;
+  $("#chpw").onclick=()=>{const m=modal(`<h2>Cambia password${closeBtn}</h2><label>Password attuale</label><input id="a" type="password" style="width:100%"><label>Nuova password (min. 8)</label><input id="n" type="password" style="width:100%"><p><button class="btn" id="ok">Salva</button></p>`);
+    $("#ok",m).onclick=async()=>{try{await api("/password",{json:{attuale:$("#a",m).value,nuova:$("#n",m).value}});m.close();toast("Password aggiornata")}catch(e){toast(e.message,1)}}};
+  go(pages[0]?pages[0][0]:null);
+}
+function go(p){
+  S.page=p;document.querySelectorAll("nav a[data-p]").forEach(a=>a.classList.toggle("on",a.dataset.p===p));
+  const pg=PAGES.find(x=>x[0]===p);const el=$("#page");
+  if(!pg){el.innerHTML='<div class="card">Nessuna funzione abilitata per il tuo profilo. Contatta il tuo responsabile.</div>';return}
+  el.innerHTML='<div class="mut">Caricamento…</div>';
+  pg[4](el).catch(e=>{el.innerHTML=`<div class="card" style="color:var(--ko)">${esc(e.message)}</div>`});
+}
+function setUnread(n){S.unread=n;const u=$("#unread");if(u){u.textContent=n;u.classList.toggle("hide",!n)}}
+function agentOpts(sel,all="Tutti"){return `<option value="">${all}</option>`+S.agenti.map(a=>`<option value="${a.id}" ${String(sel)===String(a.id)?"selected":""}>${esc(a.nome)} (${esc(S.meta.ruoli.find(r=>r.id===a.ruolo).label)})</option>`).join("")}
+const showAgentFilter=()=>S.me.ruolo!=="agente"&&S.me.ruolo!=="recuperatore"&&S.agenti.length>0;
+
+/* ------------------------------------------------ dashboard */
+const DF={area_id:"",categoria:"",agent_ids:[],campaign_ids:[],dal:"",al:"",preset:""};
+const ymd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const PRESETS=[["","Tutto il periodo"],["7","Ultimi 7 giorni"],["30","Ultimi 30 giorni"],["mese","Questo mese"],["mesep","Mese scorso"],["anno","Quest'anno"],["x","Date a scelta"]];
+function presetDates(k){const t=new Date(),y=t.getFullYear(),m=t.getMonth();
+  if(k==="7"||k==="30"){const f=new Date(t);f.setDate(f.getDate()-(+k-1));return[ymd(f),ymd(t)]}
+  if(k==="mese")return[ymd(new Date(y,m,1)),ymd(t)];
+  if(k==="mesep")return[ymd(new Date(y,m-1,1)),ymd(new Date(y,m,0))];
+  if(k==="anno")return[ymd(new Date(y,0,1)),ymd(t)];
+  return["",""]}
+function dashQS(){const q=new URLSearchParams();
+  if(DF.area_id)q.set("area_id",DF.area_id);if(DF.categoria)q.set("categoria",DF.categoria);
+  if(DF.agent_ids.length)q.set("agent_ids",DF.agent_ids.join(","));if(DF.campaign_ids.length)q.set("campaign_ids",DF.campaign_ids.join(","));
+  if(DF.dal)q.set("dal",DF.dal);if(DF.al)q.set("al",DF.al);return q}
+/* finestra con elenco a spunta (agenti, campagne) */
+function multiPick({titolo,voci,sel,tutti,onOk}){
+  const cur=new Set(sel.map(String));
+  const m=modal(`<h2>${esc(titolo)}${closeBtn}</h2><input id="mpq" placeholder="Cerca…" style="width:100%;margin-bottom:8px">
+   <div class="row" style="margin-bottom:6px"><button class="btn sec sm" id="mpa">Seleziona tutti</button><button class="btn sec sm" id="mpn">${esc(tutti)}</button><span class="small mut" id="mpc"></span></div>
+   <div id="mpl" style="max-height:52vh;overflow:auto"></div><p style="margin-top:12px"><button class="btn" id="mpok">Applica</button></p>`);
+  const draw=()=>{const q=$("#mpq",m).value.trim().toLowerCase();let last=null,h="";
+    voci.filter(v=>!q||(v.label+" "+(v.sub||"")+" "+(v.gruppo||"")).toLowerCase().includes(q)).forEach(v=>{
+      if(v.gruppo!==last){last=v.gruppo;if(v.gruppo)h+=`<div class="small mut" style="margin:10px 0 2px;font-weight:600">${esc(v.gruppo)}</div>`}
+      h+=`<label class="chk"><input type="checkbox" value="${v.id}" ${cur.has(String(v.id))?"checked":""}> <span>${esc(v.label)}${v.sub?` <span class="mut small">${esc(v.sub)}</span>`:""}</span></label>`});
+    $("#mpl",m).innerHTML=h||'<div class="mut small">Nessun risultato</div>';
+    $("#mpl",m).querySelectorAll("input").forEach(i=>i.onchange=()=>{i.checked?cur.add(i.value):cur.delete(i.value);cnt()});cnt()};
+  const cnt=()=>$("#mpc",m).textContent=cur.size?cur.size+" selezionati":tutti;
+  $("#mpq",m).oninput=draw;$("#mpa",m).onclick=()=>{voci.forEach(v=>cur.add(String(v.id)));draw()};$("#mpn",m).onclick=()=>{cur.clear();draw()};
+  $("#mpok",m).onclick=()=>{m.close();onOk([...cur].map(Number))};draw();
+}
+const lkD=(txt,f,cat,ag,n)=>((n!=null?n:txt)?`<a href="#" class="dk" data-kf="${f}" data-cat="${cat||""}" data-ag="${ag||""}">${txt}</a>`:txt);
+const KFL={totale:"Tutte le opportunità",gestite:"Gestite",da_gestire:"Da gestire",scadute:"Con SLA scaduto",contratti:"Contratti",ko:"KO",appuntamenti:"Con appuntamento",non_assegnate:"Non assegnate"};
+async function elencoDash(f,cat,ag,reload){
+  try{
+    const q=dashQS();q.set("filtro",f);if(cat)q.set("cat",cat);if(ag)q.set("agente",ag);
+    const r=await api("/dashboard/elenco?"+q.toString());
+    const agn=ag?((S.agenti.find(a=>a.id==ag)||{}).nome||""):"";
+    const m=modal(`<h2><span>${KFL[f]}${cat?" · "+(CAT[cat]||cat):""}${agn?" · "+esc(agn):""}</span>${closeBtn}</h2>
+     <p class="small mut" style="margin-top:0">${r.totale} opportunità${r.troncato?" (mostro le prime 500)":""}, con gli stessi filtri della dashboard. Clicca una riga per vedere il dettaglio.</p>
+     <div class="tw"><table class="small"><tr><th>Cliente</th><th>Campagna</th><th>Agente</th><th>Stato</th><th>Scadenza / appuntamento</th></tr>
+     ${r.items.map(o=>`<tr class="clk" data-id="${o.id}" style="cursor:pointer"><td><b>${esc(o.cliente)}</b><div class="mut">${esc(o.localita||"")}</div></td><td>${esc(o.campagna||"")}<div class="mut">${CAT[o.categoria]||""}</div></td><td>${esc(o.agente||"—")}</td><td>${badge(o.stato,o)}</td>
+      <td>${o.stato==="appuntamento"&&o.appuntamento?fmtDT(o.appuntamento):(o.scadenza&&o.stato==="da_gestire"?`<span ${o.scaduta?'style="color:var(--ko)"':""}>${fmtDT(o.scadenza)}</span>`:"—")}</td></tr>`).join("")||'<tr><td colspan="5" class="mut">Nessuna opportunità</td></tr>'}</table></div>`);
+    m.querySelectorAll("tr.clk").forEach(tr=>tr.onclick=()=>{m.close();openOpp(+tr.dataset.id,reload)});
+  }catch(e){toast(e.message,1)}
+}
+async function pgDashboard(el){
+  const qs=dashQS();
+  const d=await api("/dashboard?"+qs);const k=d.kpi;
+  const camps=d.campagne.filter(c=>!DF.categoria||c.categoria===DF.categoria);
+  DF.campaign_ids=DF.campaign_ids.filter(id=>camps.some(c=>c.id===id));
+  const agNome=DF.agent_ids.length===0?"Tutti":DF.agent_ids.length===1?(S.agenti.find(a=>a.id===DF.agent_ids[0])||{nome:"1 selezionato"}).nome:DF.agent_ids.length+" selezionati";
+  const cmNome=DF.campaign_ids.length===0?"Tutte":DF.campaign_ids.length===1?(camps.find(c=>c.id===DF.campaign_ids[0])||{nome:"1 selezionata"}).nome:DF.campaign_ids.length+" selezionate";
+  const filtri=DF.area_id||DF.categoria||DF.agent_ids.length||DF.campaign_ids.length||DF.dal||DF.al;
+  const stato=[{l:"Da gestire",v:k.da_gestire,c:"#d97706"},{l:"Appuntamento",v:k.appuntamenti,c:"#0891b2"},{l:"Da riprogrammare",v:k.da_riprogrammare,c:"#7c3aed"},{l:"Contratto",v:k.contratti,c:"#16a34a"},{l:"KO",v:k.ko,c:"#dc2626"}];
+  el.innerHTML=`<h2>Dashboard</h2>
+  <div class="card"><div class="row" style="align-items:flex-end">
+   ${S.me.ruolo==="admin"?`<div><label>Area</label><select id="fa"><option value="">Tutte</option>${S.meta.aree.map(a=>`<option value="${a.id}" ${DF.area_id==a.id?"selected":""}>${esc(a.nome)}</option>`).join("")}</select></div>`:""}
+   ${showAgentFilter()?`<div><label>Agenti</label><button class="btn sec" id="fg" style="min-width:150px;text-align:left">${esc(agNome)} ▾</button></div>`:""}
+   <div><label>Categoria</label><select id="fc"><option value="">Tutte</option>${S.meta.categorie.map(c=>`<option value="${c}" ${DF.categoria===c?"selected":""}>${CAT[c]}</option>`).join("")}</select></div>
+   <div><label>Campagne</label><button class="btn sec" id="fm" style="min-width:150px;max-width:260px;text-align:left;overflow:hidden;text-overflow:ellipsis" ${camps.length?"":"disabled"}>${esc(camps.length?cmNome:"Nessuna campagna")} ▾</button></div>
+   <div><label>Periodo (data di arrivo)</label><select id="fp">${PRESETS.map(([v,l])=>`<option value="${v}" ${DF.preset===v?"selected":""}>${l}</option>`).join("")}</select></div>
+   <div><label>Dal</label><input type="date" id="fd" value="${esc(DF.dal)}"></div><div><label>Al</label><input type="date" id="ff" value="${esc(DF.al)}"></div>
+   ${filtri?'<div><button class="btn sec" id="fz">Azzera filtri</button></div>':""}</div></div>
+  <div class="kpis">
+   <div class="kpi clk" data-kf="totale"><b>${k.totale}</b><span>Totale</span></div><div class="kpi clk" data-kf="gestite"><b>${k.gestite}</b><span>Gestite</span></div>
+   <div class="kpi clk" data-kf="da_gestire"><b style="color:var(--warn)">${k.da_gestire}</b><span>Da gestire</span></div>
+   <div class="kpi clk" data-kf="scadute"><b style="color:var(--ko)">${k.scadute}</b><span>SLA scaduto</span></div>
+   <div class="kpi clk" data-kf="contratti"><b style="color:var(--ok)">${k.contratti}</b><span>Contratti</span></div>
+   <div class="kpi"><b>${k.conversione==null?"–":k.conversione+"%"}</b><span>Conversione</span></div>
+   ${k.non_assegnate?`<div class="kpi clk" data-kf="non_assegnate"><b>${k.non_assegnate}</b><span>Non assegnate</span></div>`:""}</div>
+  <div class="card"><h3>Mappa: contratti, KO e opportunità</h3><div id="mapbox"><div class="mut">Caricamento mappa…</div></div></div>
+  <div class="grid2"><div class="card"><h3>Gestite e da gestire</h3>${donut(stato,k.totale,"opportunità")}</div>
+   <div class="card"><h3>${d.periodo.filtrato?"Andamento dal "+new Date(d.periodo.dal+"T12:00:00").toLocaleDateString("it-IT")+" al "+new Date(d.periodo.al+"T12:00:00").toLocaleDateString("it-IT"):"Andamento ultimi 14 giorni"}</h3>${lineChart(d.trend,[{k:"gestite",l:"Gestite",c:"#2457d6"},{k:"contratti",l:"Contratti",c:"#16a34a"}])}</div></div>
+  <div class="card"><h3>Per categoria</h3><div class="tw"><table><tr><th>Categoria</th><th>Totale</th><th>Da gestire</th><th>Contratti</th><th>KO</th><th style="width:30%">Avanzamento</th></tr>
+   ${d.categorie.map(c=>`<tr><td>${CAT[c.categoria]||c.categoria||"–"}</td><td>${lkD(c.totale,"totale",c.categoria)}</td><td>${lkD(c.da_gestire,"da_gestire",c.categoria)}</td><td>${lkD(c.contratti,"contratti",c.categoria)}</td><td>${lkD(c.ko,"ko",c.categoria)}</td><td>${stackBar([{v:c.contratti,c:"#16a34a",l:"Contratti"},{v:c.ko,c:"#dc2626",l:"KO"},{v:c.totale-c.contratti-c.ko-c.da_gestire,c:"#0891b2",l:"In lavorazione"},{v:c.da_gestire,c:"#d97706",l:"Da gestire"}],c.totale)}</td></tr>`).join("")||'<tr><td colspan="6" class="mut">Nessun dato</td></tr>'}</table></div></div>
+  ${["admin","direttore","area_manager","recuperatore","ufficio_disdette"].includes(S.me.ruolo)?`<div class="card" id="stdis"><div class="mut">Caricamento disdette…</div></div>`:""}
+  ${d.team.length>1||S.me.ruolo!=="agente"?`<div class="card"><h3>Team</h3><div class="tw"><table><tr><th>Nome</th><th>Referente</th><th>Assegnate</th><th>Da gestire</th><th>SLA scaduto</th><th>Contratti</th><th>KO</th><th style="width:22%">Gestione</th></tr>
+   ${d.team.map(t=>`<tr><td>${esc(t.nome)}</td><td class="mut">${esc(t.riferimento||"")}</td><td>${lkD(t.assegnate,"totale","",t.id)}</td><td>${lkD(t.da_gestire,"da_gestire","",t.id)}</td><td>${t.scadute?lkD(`<span class="badge b-scad">${t.scadute}</span>`,"scadute","",t.id,t.scadute):0}</td><td>${lkD(t.contratti,"contratti","",t.id)}</td><td>${lkD(t.ko,"ko","",t.id)}</td><td>${stackBar([{v:t.gestite,c:"#2457d6",l:"Gestite"},{v:t.da_gestire,c:"#d97706",l:"Da gestire"}],t.assegnate)}</td></tr>`).join("")||'<tr><td colspan="8" class="mut">Nessun dato</td></tr>'}</table></div></div>`:""}`;
+  const bind=(id,k)=>{const e=$(id);if(e)e.onchange=()=>{DF[k]=e.value;pgDashboard(el)}};
+  bind("#fa","area_id");bind("#fc","categoria");
+  if($("#fg"))$("#fg").onclick=()=>multiPick({titolo:"Scegli gli agenti",tutti:"Tutti (nessun filtro)",sel:DF.agent_ids,
+    voci:S.agenti.map(a=>({id:a.id,label:a.nome,sub:S.meta.ruoli.find(r=>r.id===a.ruolo).label+(a.riferimento?" · risponde a "+a.riferimento:"")})),
+    onOk:ids=>{DF.agent_ids=ids;pgDashboard(el)}});
+  if($("#fm"))$("#fm").onclick=()=>multiPick({titolo:"Scegli le campagne",tutti:"Tutte (nessun filtro)",sel:DF.campaign_ids,
+    voci:camps.map(c=>({id:c.id,label:c.nome,sub:(c.sottotipo?SOTTO[c.sottotipo]+" · ":"")+c.totale+" opportunità",gruppo:CAT[c.categoria]||c.categoria})),
+    onOk:ids=>{DF.campaign_ids=ids;pgDashboard(el)}});
+  $("#fp").onchange=e=>{DF.preset=e.target.value;if(DF.preset!=="x"){[DF.dal,DF.al]=presetDates(DF.preset);pgDashboard(el)}else{$("#fd").focus()}};
+  const dt=(id,k)=>{$(id).onchange=e=>{DF[k]=e.target.value;DF.preset=(DF.dal||DF.al)?"x":"";pgDashboard(el)}};dt("#fd","dal");dt("#ff","al");
+  if($("#fz"))$("#fz").onclick=()=>{Object.assign(DF,{area_id:"",categoria:"",agent_ids:[],campaign_ids:[],dal:"",al:"",preset:""});pgDashboard(el)};
+  loadMap(qs.toString());
+  el.querySelectorAll(".kpi.clk").forEach(k=>k.onclick=()=>elencoDash(k.dataset.kf,"","",()=>pgDashboard(el)));
+  el.querySelectorAll("a.dk").forEach(a=>a.onclick=e=>{e.preventDefault();elencoDash(a.dataset.kf,a.dataset.cat,a.dataset.ag,()=>pgDashboard(el))});
+  loadStatDisdette(DF.area_id);
+}
+let DSANNO="";
+async function loadStatDisdette(area){
+  const box=$("#stdis");if(!box)return;
+  try{
+    const st=await api("/statistiche/disdette?anno="+DSANNO+(area?"&area_id="+area:""));DSANNO=st.anno;
+    const T=st.trimestri.concat([st.totale]),pc=v=>v==null?"–":v.toLocaleString("it-IT")+"%";
+    const motivi=st.totale.motivi.filter(m=>m.id!=="nd"||m.n);
+    const lk=(n,q,f,mo)=>n?`<a href="#" class="dd" data-q="${q}" data-f="${f}" data-m="${mo||""}">${n}</a>`:n;
+    box.innerHTML=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">Disdette esitate per trimestre</h3>
+     <div class="row"><select id="dsa">${st.anni.map(a=>`<option ${+a===st.anno?"selected":""}>${a}</option>`).join("")}</select>${can("export")?`<button class="btn sec" id="dsx">⬇ Excel</button>`:""}</div></div>
+     <div class="small mut" style="margin:4px 0 8px">Clicca su un numero per vedere le disdette che lo compongono. Le disdette contano nel trimestre solare in cui sono state assegnate; ogni trimestre ha un mese in più dopo la sua fine per completare la lavorazione e diventa <b>definitivo</b> dal giorno dopo. Le percentuali sono calcolate sulle disdette lavorate: le <b>non lavorabili sono escluse</b>.</div>
+     ${st.totale.ricevute?`<div class="grid2" style="margin-bottom:12px">
+      <div><h4 style="margin:0 0 4px">Esiti per trimestre</h4>${colChart(st.trimestri.map(t=>t.trimestre+"° trim."),[{l:"Recuperate",c:"#16a34a",vals:st.trimestri.map(t=>t.recuperate)},{l:"Non recuperate",c:"#dc2626",vals:st.trimestri.map(t=>t.non_recuperate)},{l:"Non lavorabili",c:"#9ca3af",vals:st.trimestri.map(t=>t.non_lavorabili)}])}</div>
+      <div><h4 style="margin:0 0 4px">Valore recuperato e canone originario (€)</h4>${colChart(st.trimestri.map(t=>t.trimestre+"° trim."),[{l:"Canone originario delle recuperate",c:"#93c5fd",vals:st.trimestri.map(t=>t.canone_recuperate)},{l:"Valore recuperato",c:"#2563eb",vals:st.trimestri.map(t=>t.valore)}],v=>v>=1000?(Math.round(v/100)/10).toLocaleString("it-IT")+"k":v.toLocaleString("it-IT"))}</div>
+      <div><h4 style="margin:0 0 4px">Percentuale di recupero per trimestre</h4>${colChart(st.trimestri.map(t=>t.trimestre+"° trim."),[{l:"% recuperate sulle lavorate",c:"#16a34a",vals:st.trimestri.map(t=>t.pct_recuperate||0)}],v=>v+"%")}</div>
+      <div><h4 style="margin:0 0 4px">Esiti ${st.anno}</h4>${donut([{v:st.totale.recuperate,c:"#16a34a",l:"Recuperate"},{v:st.totale.non_recuperate,c:"#dc2626",l:"Non recuperate"},{v:st.totale.non_lavorabili,c:"#9ca3af",l:"Non lavorabili (escluse)"},{v:st.totale.aperte,c:"#f59e0b",l:"Ancora aperte"}],st.totale.ricevute,"disdette")}</div>
+      ${st.totale.non_recuperate?`<div><h4 style="margin:0 0 4px">Perché non recuperate</h4>${donut(motivi.filter(m=>!m.escluso&&m.n).map((m,k)=>({v:m.n,c:["#dc2626","#f97316","#a855f7","#64748b"][k%4],l:m.label.replace("Non recuperata: ","")})),st.totale.non_recuperate,"non recuperate")}</div>`:""}
+     </div>`:""}
+     <div class="tw"><table><tr><th>Periodo</th><th>Ricevute</th><th>Ancora aperte</th><th>Esitate</th><th>Non lavorabili (escluse)</th><th>Recuperate</th><th>Valore recuperato</th><th>Canone originario lavorate</th><th>Non recuperate</th></tr>
+     ${T.map(t=>`<tr style="${t.trimestre===0?"font-weight:600;background:#f5f5f7":""}"><td>${t.label}<div class="small mut">${t.mesi}</div>${t.trimestre?(t.definitiva?'<span class="badge b-contratto">definitiva</span>':`<span class="badge b-da_gestire" title="Lavorazione consentita fino al ${new Date(t.lavorazione_fino+"T12:00:00").toLocaleDateString("it-IT")}">provvisoria · definitiva dal ${new Date(t.definitiva_dal+"T12:00:00").toLocaleDateString("it-IT")}</span>`):""}</td>
+       <td>${lk(t.ricevute,t.trimestre,"ricevute")}</td><td>${lk(t.aperte,t.trimestre,"aperte")}</td><td>${lk(t.esitate,t.trimestre,"esitate")}</td><td>${lk(t.non_lavorabili,t.trimestre,"non_lavorabili")}</td>
+       <td>${lk(t.recuperate,t.trimestre,"recuperate")} <span class="small mut">(${pc(t.pct_recuperate)})</span></td>
+       <td><b>${t.recuperate?`<a href="#" class="dd" data-q="${t.trimestre}" data-f="recuperate">${eur(t.valore)}</a>`:eur(t.valore)}</b>${t.canone_recuperate?`<div class="small mut">${pc(t.pct_valore)} del canone originario (${eur(t.canone_recuperate)})</div>`:""}</td><td>${eur(t.canone_esitate)}</td>
+       <td>${lk(t.non_recuperate,t.trimestre,"non_recuperate")} <span class="small mut">(${pc(t.pct_non_recuperate)})</span></td>
+</tr>`).join("")}</table></div>
+     <h4 style="margin:14px 0 6px">Dettaglio delle non recuperate</h4>
+     <div class="tw"><table><tr><th>Motivo</th>${T.map(t=>`<th>${t.trimestre?t.trimestre+"° trim.":"Anno"}</th>`).join("")}</tr>
+     ${motivi.map(m=>`<tr><td>${esc(m.label)}</td>${T.map(t=>{const x=t.motivi.find(y=>y.id===m.id)||{n:0};return `<td>${x.n?(x.escluso?lk(x.n,t.trimestre,"non_lavorabili"):lk(x.n,t.trimestre,"non_recuperate",m.id))+(x.escluso?"":` <span class="small mut">${pc(x.pct_non_rec)} (${pc(x.pct_totale)})</span>`):0}</td>`}).join("")}</tr>`).join("")}</table></div>
+     <div class="small mut" style="margin-top:6px">Per i motivi: percentuale sulle non recuperate e, tra parentesi, sulle disdette lavorate.</div>`;
+    $("#dsa",box).onchange=e=>{DSANNO=e.target.value;loadStatDisdette(area)};
+    if($("#dsx",box))$("#dsx",box).onclick=()=>{location.href="/api/statistiche/disdette.xlsx?anno="+st.anno+(area?"&area_id="+area:"")};
+    box.querySelectorAll("a.dd").forEach(a=>a.onclick=e=>{e.preventDefault();dettaglioDisdette(st.anno,+a.dataset.q,a.dataset.f,a.dataset.m,area,T.find(t=>t.trimestre===+a.dataset.q))});
+  }catch(e){box.innerHTML='<div class="mut small">Statistica disdette non disponibile: '+esc(e.message)+'</div>'}
+}
+const FLAB={ricevute:"ricevute",aperte:"ancora aperte",esitate:"esitate",recuperate:"recuperate",non_recuperate:"non recuperate",non_lavorabili:"non lavorabili (escluse dalle percentuali)"};
+async function dettaglioDisdette(anno,q,f,mo,area,blocco){
+  try{
+    const r=await api(`/statistiche/disdette/dettaglio?anno=${anno}&trimestre=${q}&filtro=${f}&motivo=${mo||""}${area?"&area_id="+area:""}`);
+    const tit=`Disdette ${FLAB[f]}${mo&&MOTNR[mo==="nd"?"":mo]?" · "+MOTNR[mo]:""} — ${q?q+"° trimestre":"anno"} ${anno}`;
+    const m=modal(`<h2><span>${esc(tit)}</span>${closeBtn}</h2>
+     <p class="small mut" style="margin-top:0">${r.totale} disdette${r.somma_canone?` · canone originario ${eur(r.somma_canone)}`:""}${r.somma_valore?` · valore recuperato ${eur(r.somma_valore)}`:""}. Clicca una riga per aprire la scheda.</p>
+     <div class="tw"><table class="small"><tr><th>Cliente</th><th>Recuperatore</th><th>Assegnata</th><th>Chiusa</th><th>Esito</th><th>Canone</th><th>Valore</th><th>Chiamate</th></tr>
+     ${r.items.map(x=>`<tr class="clk" data-id="${x.id}" style="cursor:pointer"><td><b>${esc(x.cliente)}</b><div class="mut">${esc(x.localita||"")}</div></td><td>${esc(x.recuperatore||"—")}</td><td>${new Date((x.assegnata||"").slice(0,10)+"T12:00:00").toLocaleDateString("it-IT")}</td><td>${x.chiusa?new Date(x.chiusa.slice(0,10)+"T12:00:00").toLocaleDateString("it-IT"):"—"}</td>
+      <td>${x.esito?(x.esito==="recuperata"?'<span class="badge b-contratto">Recuperata</span>':'<span class="badge b-ko">Non recuperata</span>')+(x.motivo?`<div class="mut">${esc(x.motivo)}</div>`:""):'<span class="badge b-in_lavorazione">Aperta</span>'}${x.nota?`<div class="mut" style="max-width:240px;white-space:pre-wrap">${esc(x.nota.slice(0,140))}</div>`:""}</td>
+      <td>${x.canone!=null?eur(x.canone):"–"}</td><td>${x.valore!=null?eur(x.valore):"–"}</td><td>${x.chiamate}</td></tr>`).join("")||'<tr><td colspan="8" class="mut">Nessuna disdetta</td></tr>'}</table></div>`);
+    m.querySelectorAll("tr.clk").forEach(tr=>tr.onclick=()=>{m.close();openOpp(+tr.dataset.id,()=>loadStatDisdette(area))});
+  }catch(e){toast(e.message,1)}
+}
+
+/* ------------------------------------------------ opportunità */
+const OF={q:"",stato:"",categoria:"",agent_id:"",scadute:"",non_assegnate:""};
+async function pgOpps(el){
+  el.innerHTML=`<h2>Opportunità</h2><div class="card"><div class="row">
+   <div class="grow"><label>Cerca</label><input id="oq" style="width:100%" placeholder="Cliente, località, telefono" value="${esc(OF.q)}"></div>
+   <div><label>Stato</label><select id="os"><option value="">Tutti</option>${S.meta.stati.map(s=>`<option value="${s}" ${OF.stato===s?"selected":""}>${STATO[s]}</option>`).join("")}</select></div>
+   <div><label>Categoria</label><select id="oc"><option value="">Tutte</option>${S.meta.categorie.map(c=>`<option value="${c}" ${OF.categoria===c?"selected":""}>${CAT[c]}</option>`).join("")}</select></div>
+   ${showAgentFilter()?`<div><label>Agente</label><select id="og">${agentOpts(OF.agent_id)}</select></div>`:""}
+   <label class="chk"><input type="checkbox" id="osc" ${OF.scadute?"checked":""}> SLA scaduto</label>
+   ${can("assegna")?`<label class="chk"><input type="checkbox" id="ona" ${OF.non_assegnate?"checked":""}> Non assegnate</label>`:""}
+   ${can("export")?`<button class="btn sec" id="oexp">⬇ Esporta Excel</button>`:""}</div></div><div id="ol"></div>`;
+  const qs=()=>{const p=new URLSearchParams();Object.entries(OF).forEach(([k,v])=>v&&p.set(k,v));return p};
+  const load=async()=>{const d=await api("/opportunities?"+qs());
+    $("#ol").innerHTML=`<div class="card"><div class="small mut" style="margin-bottom:6px">${d.totale} risultati${d.totale>d.items.length?` (mostrate ${d.items.length})`:""}</div><div class="tw"><table>
+    <tr><th>Cliente</th><th>Località</th><th>Campagna</th><th>Agente</th><th>Stato</th><th>Scadenza / appuntamento</th></tr>
+    ${d.items.map(o=>`<tr class="click" data-id="${o.id}"><td><b>${esc(o.cliente)}</b>${o.dup_info?' <span class="dup" title="'+esc(o.dup_info)+'">⚠ già presente</span>':""}<div class="small mut">${esc(o.telefono)}</div></td><td>${esc(o.localita)}</td>
+     <td>${esc(o.campagna||"")}<div class="small mut">${CAT[o.categoria]||""}${o.sottotipo?" · "+SOTTO[o.sottotipo]:""}</div></td><td>${esc(o.agente||"—")}</td><td>${badge(o.stato,o)}</td>
+     <td>${o.stato==="appuntamento"?fmtDT(o.appuntamento):sla(o)}</td></tr>`).join("")||'<tr><td colspan="6" class="mut">Nessuna opportunità</td></tr>'}</table></div></div>`;
+    document.querySelectorAll("#ol tr.click").forEach(r=>r.onclick=()=>openOpp(+r.dataset.id,load))};
+  let t;const upd=()=>{OF.q=$("#oq").value;OF.stato=$("#os").value;OF.categoria=$("#oc").value;if($("#og"))OF.agent_id=$("#og").value;OF.scadute=$("#osc").checked?"1":"";if($("#ona"))OF.non_assegnate=$("#ona").checked?"1":"";load().catch(e=>toast(e.message,1))};
+  $("#oq").oninput=()=>{clearTimeout(t);t=setTimeout(upd,300)};
+  ["#os","#oc","#og","#osc","#ona"].forEach(s=>{const e=$(s);if(e)e.onchange=upd});
+  if($("#oexp"))$("#oexp").onclick=()=>{location.href="/api/export.xlsx?"+qs()};
+  await load();
+}
+function emailImport(){
+  const m=modal(`<h2>📧 Carica da email${closeBtn}</h2>
+   <p class="small mut" style="margin-top:0">Carica la mail di una <b>disdetta</b> (Ufficio Disdette) o di un <b>lead</b> (Caring) come PDF, file .eml, oppure incolla il testo: i dati vengono letti automaticamente e puoi controllarli prima di salvare.</p>
+   <div id="em1"><input type="file" id="emf" accept=".pdf,.eml,.txt,.html,.htm"><p class="small mut" style="margin:8px 0 4px">oppure incolla qui il testo della mail:</p><textarea id="emt" rows="5" style="width:100%" placeholder="Incolla qui il testo della mail"></textarea>
+   <p><button class="btn" id="emgo">Leggi la mail</button></p></div><div id="em2"></div>`,true);
+  $("#emgo",m).onclick=async()=>{
+    const f=$("#emf",m).files[0],t=$("#emt",m).value.trim();
+    if(!f&&!t){toast("Scegli un file o incolla il testo",1);return}
+    const b=$("#emgo",m);b.disabled=true;b.textContent="Lettura…";
+    try{
+      let r;
+      if(f){const fd=new FormData();fd.append("file",f);r=await api("/email/leggi",{form:fd})}
+      else r=await api("/email/leggi",{json:{testo:t}});
+      emailForm(m,r);
+    }catch(e){toast(e.message,1)}finally{b.disabled=false;b.textContent="Leggi la mail"}
+  };
+}
+function emailForm(m,r){
+  const p=r.parsed,tipo=p.tipo||"lead",me=r.assegna_a_me;
+  const apv=p.appuntamento?p.appuntamento.replace(" ","T"):"";
+  $("#em1",m).classList.add("hide");
+  $("#em2",m).innerHTML=`${r.riconosciuta?`<div class="small" style="color:var(--ok);margin-bottom:6px">✔ Mail riconosciuta come <b>${tipo==="disdetta"?"DISDETTA":"LEAD"}</b>${p.oggetto?" — "+esc(p.oggetto):""}. Controlla i dati e correggi se serve.</div>`:`<div class="small" style="color:var(--warn);margin-bottom:6px">Non ho riconosciuto il tipo di mail: scegli il tipo e compila i dati; il testo è stato messo nelle note.</div>`}
+   ${r.duplicato?`<div class="small" style="color:var(--ko);margin-bottom:6px">⚠ Questa mail risulta già caricata: «${esc(r.duplicato.cliente)}» (stato ${esc(STATO[r.duplicato.stato]||r.duplicato.stato)}). Se salvi comunque verrà creata una seconda opportunità.</div>`:""}
+   <div class="row" style="gap:10px;flex-wrap:wrap">
+    <div><label>Tipo</label><select id="et"><option value="lead" ${tipo==="lead"?"selected":""}>Lead (nuovo appuntamento)</option><option value="disdetta" ${tipo==="disdetta"?"selected":""}>Disdetta (da recuperare)</option></select></div>
+    <div class="grow"><label>Cliente</label><input id="ec" style="width:100%" value="${esc(p.cliente)}"></div>
+    <div><label>Telefono</label><input id="etel" value="${esc(p.telefono)}"></div></div>
+   <div class="row" style="gap:10px;flex-wrap:wrap">
+    <div class="grow"><label>Località</label><input id="el" style="width:100%" value="${esc(p.localita)}"></div>
+    <div><label>Prov.</label><input id="ep" maxlength="2" size="3" value="${esc(p.provincia)}"></div>
+    <div class="grow"><label>Indirizzo</label><input id="ei" style="width:100%" value="${esc(p.indirizzo)}"></div></div>
+   <div class="row" style="gap:10px;flex-wrap:wrap"><div><label>Riferimento</label><input id="er" value="${esc(p.rif_esterno||"")}"></div>
+    <div id="ecw"><label>Canone complessivo attuale (€)</label><input id="ecan" inputmode="decimal" size="10" value="${p.canone!=null?String(p.canone).replace(".",","):""}"></div>
+    <div id="eapw" class="grow">${p.appuntamento?`<div class="small" style="background:#eef6ff;border-radius:12px;padding:8px 12px;margin-bottom:6px"><b>📅 Nella mail c'è un appuntamento:</b> ${esc(fmtDT(p.appuntamento))}. Scegli se inserirlo direttamente nell'agenda (puoi correggere data e ora).</div>`:""}<label>Appuntamento (lead)</label><input type="datetime-local" id="eap" value="${esc(apv)}"></div></div>
+   <label>Note (dati della mail)</label><textarea id="en2" rows="8" style="width:100%">${esc(p.note)}</textarea>
+   <div id="eas"></div>
+   <p class="row"><button class="btn ok" id="emsave">Crea opportunità</button> <button class="btn sec" id="emsave2">Crea senza fissare l'appuntamento</button> <button class="btn sec" id="emback">← Altra mail</button></p>`;
+  const lab=()=>{const ha=$("#et",m).value==="lead"&&$("#eap",m).value;$("#emsave",m).textContent=ha?"Crea e inserisci in agenda":"Crea opportunità";$("#emsave2",m).style.display=ha?"":"none"};
+  $("#eap",m).oninput=lab;
+  const assign=()=>{
+    const t=$("#et",m).value;$("#eapw",m).style.display=t==="lead"?"":"none";$("#ecw",m).style.display=t==="disdetta"?"":"none";lab();
+    if(me){$("#eas",m).innerHTML=`<p class="small" style="color:var(--ok)">Verrà assegnata a te e potrai gestirla subito.</p>`;return}
+    const list=r.assegnatari[t]||[],sug=r.suggerito[t];
+    $("#eas",m).innerHTML=`<label>Assegna a (obbligatorio)</label><select id="eag" style="width:100%"><option value="">— scegli ${t==="disdetta"?"l'agente o il recuperatore":"l'agente"} —</option>${list.map(a=>`<option value="${a.id}" ${a.id===sug?"selected":""}>${esc(a.nome)}${a.ruolo==="recuperatore"?" (recuperatore)":""}</option>`).join("")}</select>${sug?`<div class="small mut">Suggerito${t==="disdetta"&&p.agente_gestore?" in base all'agente gestore indicato nella mail":" in base alla zona di lavoro"}.</div>`:""}${list.length?"":'<div class="small" style="color:var(--ko)">Nessun agente disponibile nella tua rete.</div>'}`;
+  };
+  $("#et",m).onchange=assign;assign();
+  $("#emback",m).onclick=()=>{$("#em2",m).innerHTML="";$("#em1",m).classList.remove("hide")};
+  const save=async(force,conApp,forzaApp)=>{
+    const t=$("#et",m).value,body={tipo:t,cliente:$("#ec",m).value,telefono:$("#etel",m).value,localita:$("#el",m).value,provincia:$("#ep",m).value,
+      indirizzo:$("#ei",m).value,rif_esterno:$("#er",m).value,canone:t==="disdetta"?$("#ecan",m).value:"",note:$("#en2",m).value,appuntamento:t==="lead"&&conApp?$("#eap",m).value:"",forza:force?1:0,forza_app:forzaApp?1:0};
+    if(!me){body.agent_id=+($("#eag",m).value||0);if(!body.agent_id){toast("Scegli a chi assegnarla",1);return}}
+    try{
+      const x=await api("/email/crea",{json:body});m.close();
+      toast((x.avviso?("Creata e assegnata a "+x.assegnato_a+". "+x.avviso):("Opportunità creata"+(me?"":" e assegnata a "+x.assegnato_a)))+(x.fissato?(x.avviso?"":".")+" Appuntamento in agenda il "+x.fissato+".":""));
+      go(S.page);
+    }catch(e){
+      if(e.status===409&&e.data&&e.data.conferma_app){
+        const r=await confermaAppuntamento(e.data.conferma_app,e.data.agente);if(!r)return;
+        if(r.forza)return save(force,conApp,true);
+        $("#eap",m).value=r.data+"T"+r.ora;lab();return save(force,conApp,false)}
+      if(e.status===409&&confirm(e.message+"\n\nVuoi crearla comunque?"))return save(true,conApp,forzaApp);
+      if(e.status!==409)toast(e.message,1);
+    }
+  };
+  $("#emsave",m).onclick=()=>save(false,true,false);
+  $("#emsave2",m).onclick=()=>save(false,false,false);
+}
+
+/* avviso quando l'agenda dell'agente è piena o ci sono appuntamenti concomitanti: si può inserire comunque */
+function confermaAppuntamento(info,chi){
+  return new Promise(res=>{
+    let fatto=false;const fin=v=>{if(!fatto){fatto=true;res(v)}};
+    const conc=new Set(info.concomitanti.map(x=>x.id));
+    const righe=info.giorno.concat([{id:0,ora:info.ora,cliente:"Nuovo appuntamento",localita:"",nuovo:true}]).sort((a,b)=>a.ora<b.ora?-1:1);
+    const m=modal(`<h2>Controlla l'agenda${closeBtn}</h2>
+     <p style="margin-top:0">${chi?`<b>${esc(chi)}</b> · `:""}${esc(fmtD(info.data))}</p>
+     <p style="color:var(--warn);font-weight:500">${esc(info.avviso)}</p>
+     <div class="tw"><table class="small"><tr><th>Ora</th><th>Cliente</th><th>Località</th><th></th></tr>
+     ${righe.map(x=>`<tr style="${x.nuovo?"background:#eef6ff":conc.has(x.id)?"background:#fff1f0":""}"><td><b>${esc(x.ora)}</b></td><td>${x.nuovo?"<b>Nuovo appuntamento</b>":esc(x.cliente)}</td><td>${esc(x.localita)}</td>
+      <td>${conc.has(x.id)?`<span class="badge b-scad">concomitante</span> <a href="#" data-op="${x.id}">Apri per spostarlo</a>`:""}</td></tr>`).join("")}</table></div>
+     <p class="small mut">Puoi inserire comunque l'appuntamento, scegliere un'alternativa oppure aprire quello esistente per spostarlo.</p>
+     <p class="row"><button class="btn warn" id="cfx">Inserisci comunque</button>${info.suggerito?`<button class="btn" id="cfs">Usa ${esc(fmtD(info.suggerito.data))} alle ${esc(info.suggerito.ora)}</button>`:""}<button class="btn sec" id="cfn">Annulla</button></p>`);
+    const obs=new MutationObserver(()=>{if(!document.body.contains(m)){obs.disconnect();fin(null)}});obs.observe(document.body,{childList:true});
+    $("#cfx",m).onclick=()=>{fin({forza:true});m.close()};
+    if($("#cfs",m))$("#cfs",m).onclick=()=>{fin({data:info.suggerito.data,ora:info.suggerito.ora});m.close()};
+    $("#cfn",m).onclick=()=>m.close();
+    m.querySelectorAll("[data-op]").forEach(a=>a.onclick=e=>{e.preventDefault();m.close();openOpp(+a.dataset.op)});
+  });
+}
+async function openOpp(id,reload){
+  const o=await api("/opportunities/"+id);const closed=o.stato==="contratto"||o.stato==="ko";
+  const today=new Date().toISOString().slice(0,10);
+  const m=modal(`<h2><span>${esc(o.cliente)}</span>${closeBtn}</h2>
+   <div class="row" style="margin-bottom:8px">${badge(o.stato,o)} ${sla(o)} <span class="badge">${CAT[o.categoria]||""}${o.sottotipo?" · "+SOTTO[o.sottotipo]:""}</span></div>
+   <table class="small"><tr><td class="mut">Telefono</td><td>${o.telefono?`<a href="tel:${esc(o.telefono)}">${esc(o.telefono)}</a>`:"—"}</td></tr>
+   <tr><td class="mut">Località</td><td>${esc(o.localita)} ${esc(o.indirizzo)}</td></tr><tr><td class="mut">Campagna</td><td>${esc(o.campagna||"")}</td></tr>
+   ${o.dup_info?`<tr><td class="mut">⚠ Controllo</td><td>${dupBadge(o.dup_info,dupLiv(o.dup_info))}</td></tr>`:""}<tr><td class="mut">Agente</td><td>${esc(o.agente||"Non assegnata")}</td></tr><tr><td class="mut">Note</td><td style="white-space:pre-wrap">${esc(o.note)}</td></tr>${o.rif_esterno?`<tr><td class="mut">Riferimento</td><td>${esc(o.rif_esterno)}</td></tr>`:""}
+   ${o.appuntamento?`<tr><td class="mut">Appuntamento</td><td>${fmtDT(o.appuntamento)} ${o.stato==="appuntamento"?`<a href="#" id="icsb" class="small">📅 Aggiungi a calendario</a>`:""}</td></tr>`:""}${o.n_chiamate?`<tr><td class="mut">Chiamate</td><td>${o.n_chiamate} · ultima ${fmtDT(o.ultima_chiamata)}</td></tr>`:""}
+   ${o.categoria==="disdetta"&&o.canone!=null?`<tr><td class="mut">Canone originario</td><td>${eur(o.canone)}</td></tr>`:""}
+   ${o.disdetta_esito?`<tr><td class="mut">Esito disdetta</td><td><b>${o.disdetta_esito==="recuperata"?"Disdetta recuperata":"Disdetta non recuperata"}</b>${o.valore!=null?" · "+eur(o.valore):""}${o.disdetta_motivo?" · "+esc(MOTNR[o.disdetta_motivo]||""):""}</td></tr>`:""}${o.esito_nota?`<tr><td class="mut">Nota esito</td><td style="white-space:pre-wrap">${esc(o.esito_nota)}</td></tr>`:""}</table>
+   ${can("esiti")&&!closed?`<h3 style="margin-top:14px">Registra una chiamata</h3><div class="row"><select id="chs" class="grow">${Object.keys(ESCH).map(k=>`<option value="${k}">${ESCH[k]}</option>`).join("")}</select></div>
+    <textarea id="chn" rows="2" placeholder="Note della chiamata (facoltative)"></textarea><div class="row"><button class="btn sec" id="chok">📞 Salva chiamata</button><span class="small mut">Resta traccia nello storico; l'opportunità passa «In lavorazione».</span></div>`:""}
+   ${can("preventivi")&&!closed&&o.categoria!=="disdetta"&&o.agente_id?`<h3 style="margin-top:14px">Preventivo al cliente</h3><div id="pvbox" class="small mut">Caricamento…</div>`:""}
+   ${can("esiti")&&!closed?(o.categoria==="disdetta"?`<h3 style="margin-top:14px">Chiudi la lavorazione</h3>
+    <div class="row"><button class="btn ok" id="dr">✔ Disdetta recuperata</button><button class="btn ko" id="dn">✖ Disdetta non recuperata</button></div>
+    <div id="dform" class="hide" style="margin-top:8px"><div><label>Canone originario del contratto (€) — conferma obbligatoria</label><input id="dcan" inputmode="decimal" value="${o.canone!=null?String(o.canone).replace(".",","):""}" placeholder="es. 50,00" style="width:100%"></div>
+     <div id="dvw"><label>Valore recuperato (€) — obbligatorio</label><input id="dval" inputmode="decimal" placeholder="es. 1250,00" style="width:100%"></div>
+     <div id="dmw"><label>Motivo — obbligatorio</label><select id="dmot" style="width:100%"><option value="">— scegli —</option>${Object.keys(MOTNR).map(k=>`<option value="${k}">${k==="non_lavorabile"?"Non lavorabile":"Non recuperata: "+MOTNR[k].charAt(0).toLowerCase()+MOTNR[k].slice(1)}</option>`).join("")}</select></div>
+     <label>Note sui dettagli — obbligatorie</label><textarea id="en" rows="3" placeholder="Cosa è stato fatto, cosa ha detto il cliente, condizioni concordate…"></textarea>
+     <div class="row"><button class="btn" id="dok">Conferma chiusura</button><button class="btn sec" id="dno">Annulla</button></div></div>`
+    :`<h3 style="margin-top:14px">Rendiconta esito</h3><textarea id="en" placeholder="Nota (facoltativa)"></textarea>
+    <div class="row"><button class="btn ok" data-es="contratto">✔ Diventa contratto</button><button class="btn warn" data-es="da_riprogrammare">↻ Da riprogrammare</button><button class="btn ko" data-es="ko">✖ KO</button></div>`):""}
+   ${can("agenda")&&!closed&&o.agente_id?`<h3 style="margin-top:14px">Fissa appuntamento</h3><div class="row"><input type="date" id="ad" min="${today}"><input type="time" id="ah" value="09:30"><button class="btn" id="aok">Fissa</button></div>`:""}
+   ${can("assegna")&&!closed?`<h3 style="margin-top:14px">Riassegna</h3><div class="row"><select id="rs">${S.agenti.filter(a=>a.area_id===o.area_id&&(o.categoria==="disdetta"?(a.ruolo==="recuperatore"||a.ruolo==="agente"):a.ruolo==="agente")).map(a=>`<option value="${a.id}" ${a.id===o.agente_id?"selected":""}>${esc(a.nome)}</option>`).join("")}</select><button class="btn sec" id="rok">Assegna</button></div>`:""}
+   ${can("esiti")?`<h3 style="margin-top:14px">Aggiungi nota</h3><div class="row"><input id="nt" class="grow" placeholder="Nota rapida"><button class="btn sec" id="nok">Aggiungi</button></div>`:""}
+   <h3 style="margin-top:14px">Storico</h3>${o.eventi.map(e=>`<div class="ev small"><b>${esc(e.azione)}</b> — ${esc(e.utente||"sistema")} · ${fmtDT(e.quando)}${e.nota?`<div>${esc(e.nota)}</div>`:""}</div>`).join("")||'<div class="mut small">Nessun evento</div>'}`);
+  const done=async(fn,msg)=>{try{await fn();m.close();toast(msg);if(reload)reload()}catch(e){toast(e.message,1)}};
+  if($("#pvbox",m))caricaPreventivi(m,o,id,reload);
+  if($("#chok",m))$("#chok",m).onclick=()=>done(()=>api(`/opportunities/${id}/chiamata`,{json:{esito:$("#chs",m).value,nota:$("#chn",m).value}}),"Chiamata registrata");
+  if($("#dr",m)){let tipo="";const apri=t=>{tipo=t;$("#dform",m).classList.remove("hide");$("#dvw",m).style.display=t==="recuperata"?"":"none";$("#dmw",m).style.display=t==="recuperata"?"none":"";$("#en",m).focus()};
+    $("#dr",m).onclick=()=>apri("recuperata");$("#dn",m).onclick=()=>apri("non_recuperata");$("#dno",m).onclick=()=>$("#dform",m).classList.add("hide");
+    $("#dok",m).onclick=()=>done(()=>api(`/opportunities/${id}/esito`,{json:{esito:tipo,canone:$("#dcan",m).value,valore:$("#dval",m).value,motivo:$("#dmot",m).value,nota:$("#en",m).value}}),tipo==="recuperata"?"Disdetta recuperata registrata":"Disdetta non recuperata registrata")}
+  m.querySelectorAll("[data-es]").forEach(b=>b.onclick=()=>done(()=>api(`/opportunities/${id}/esito`,{json:{esito:b.dataset.es,nota:$("#en",m).value}}),"Esito registrato"));
+  if($("#icsb",m))$("#icsb",m).onclick=async e=>{e.preventDefault();try{const r=await api(`/opportunities/${id}/ics`,{raw:true});if(!r.ok)throw new Error("Download non riuscito ("+r.status+")");
+    const b=await r.blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`appuntamento-${id}.ics`;a.click();toast("Aprilo per aggiungerlo a Outlook")}catch(x){toast(x.message,1)}};
+  if($("#aok",m))$("#aok",m).onclick=async()=>{let data=$("#ad",m).value,ora=$("#ah",m).value,forza=false;
+    for(;;){
+      try{await api(`/opportunities/${id}/appuntamento`,{json:{data,ora,forza}});m.close();toast("Appuntamento fissato");if(reload)reload();return}
+      catch(e){
+        if(e.status===409&&e.data&&e.data.conferma){const r=await confermaAppuntamento(e.data.conferma,o.agente);if(!r)return;
+          if(r.forza)forza=true;else{data=r.data;ora=r.ora;forza=false;$("#ad",m).value=data;$("#ah",m).value=ora}continue}
+        toast(e.message,1);return}}};
+  if($("#rok",m))$("#rok",m).onclick=()=>done(()=>api(`/opportunities/${id}/assegna`,{json:{agent_id:+$("#rs",m).value}}),"Opportunità riassegnata");
+  if($("#nok",m))$("#nok",m).onclick=()=>done(()=>api(`/opportunities/${id}/nota`,{json:{nota:$("#nt",m).value}}),"Nota aggiunta");
+}
+
+
+/* ------------------------------------------------ preventivi (PDF nel formato dell'offerta tipo) */
+const PSERV=[["ispettivo","Servizio ispettivo"],["allarme","Pronto intervento allarme"],["video","Videosorveglianza"],["videoisp","Videoispezioni"],["incendio","Collegamento incendio"]];
+const NUMF=(k,l,v)=>`<div><label>${l}</label><input data-k="${k}" type="number" min="0" value="${v==null?0:v}" style="width:96px"></div>`;
+function pvCampi(s){
+  if(s==="ispettivo")return `<div class="small mut" style="margin-bottom:4px">Quante ispezioni: scrivi il numero nelle categorie che servono (0 = non previste).</div><div class="row" style="gap:8px;flex-wrap:wrap">${NUMF("int_nott","Interne notturne")}${NUMF("int_diur","Interne diurne")}${NUMF("est_nott","Esterne notturne")}${NUMF("est_diur","Esterne diurne")}</div>`;
+  const unt=`<div><label>Installazione una tantum (€, se prevista)</label><input data-k="una_tantum" inputmode="decimal" placeholder="es. 150,00" style="width:150px"></div>`;
+  if(s==="allarme")return `<div class="row" style="gap:8px;flex-wrap:wrap"><div><label>Cosa si installa</label><select data-k="dotazione"><option value="comodato">Allarme in comodato</option><option value="periferica">Solo periferica di collegamento</option></select></div>${NUMF("franchigia","Interventi in franchigia")}${unt}</div>`;
+  if(s==="video")return `<div class="row">${NUMF("telecamere","Telecamere da collegare",1)}</div>`;
+  if(s==="videoisp")return `<div class="row">${NUMF("n","Numero di videoispezioni",1)}</div>`;
+  if(s==="incendio")return `<div class="row" style="gap:8px;flex-wrap:wrap"><div><label>Periferica</label><select data-k="periferica"><option value="si">Prevista (si installa)</option><option value="no">Non prevista</option></select></div>${NUMF("franchigia","Interventi in franchigia")}${unt}</div>`;
+  return "";
+}
+function pvScaricaBlob(r,nome){return r.blob().then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=nome;a.click();return b})}
+async function pvScarica(p){const r=await api(`/preventivi/${p.id}.pdf`,{raw:true});if(!r.ok)throw new Error("Download non riuscito ("+r.status+")");await pvScaricaBlob(r,`Preventivo-${p.numero}.pdf`)}
+function pvAppuntamento(id,o,reload){
+  const dom=new Date(Date.now()+864e5);while(dom.getDay()===0||dom.getDay()===6)dom.setDate(dom.getDate()+1);
+  const m=modal(`<h2>Appuntamento per la verifica${closeBtn}</h2><p class="small mut">Fissa in agenda quando rivedere il preventivo con il cliente. Dopo l'incontro registri l'esito: contratto, KO o nuovo appuntamento.</p>
+   <div class="row"><input type="date" id="pad" value="${dom.toISOString().slice(0,10)}" min="${new Date().toISOString().slice(0,10)}"><input type="time" id="pah" value="09:30"></div>
+   <p class="row"><button class="btn ok" id="paok">📅 Fissa in agenda</button><button class="btn sec" id="pano">Lo faccio dopo</button></p>`);
+  $("#pano",m).onclick=()=>{m.close();if(reload)reload()};
+  $("#paok",m).onclick=async()=>{let data=$("#pad",m).value,ora=$("#pah",m).value,forza=false;
+    for(;;){try{await api(`/opportunities/${id}/appuntamento`,{json:{data,ora,forza,verifica_preventivo:true}});m.close();toast("Appuntamento fissato");if(reload)reload();return}
+      catch(e){if(e.status===409&&e.data&&e.data.conferma){const r=await confermaAppuntamento(e.data.conferma,o.agente);if(!r)return;
+          if(r.forza)forza=true;else{data=r.data;ora=r.ora;forza=false;$("#pad",m).value=data;$("#pah",m).value=ora}continue}
+        toast(e.message,1);return}}};
+}
+function pvInvia(p,o,id,reload){
+  const m=modal(`<h2>Invia il preventivo al cliente${closeBtn}</h2><p class="small mut">${esc(p.numero)} · ${esc(p.cliente)} · canone mensile ${eur(p.totale)} + IVA</p>
+   <label>Email del cliente</label><input id="pie" type="email" value="${esc(p.email||"")}" placeholder="nome@azienda.it" style="width:100%">
+   <p class="small mut">Dal telefono si apre direttamente la scelta dell'app (mail, WhatsApp…) con il PDF già allegato. Dal computer il PDF viene scaricato e si apre la mail già scritta: basta allegare il file scaricato.</p>
+   <p class="row"><button class="btn ok" id="pisnd">✉ Invia</button><button class="btn sec" data-x>Annulla</button></p>`);
+  $("#pisnd",m).onclick=async()=>{const mail=$("#pie",m).value.trim();
+    try{
+      const r=await api(`/preventivi/${p.id}.pdf`,{raw:true});if(!r.ok)throw new Error("PDF non disponibile ("+r.status+")");
+      const blob=await r.blob(),nome=`Preventivo-${p.numero}.pdf`,file=new File([blob],nome,{type:"application/pdf"});
+      await api(`/preventivi/${p.id}/invia`,{json:{email:mail}});
+      const oggetto=`Preventivo Sicuritalia - ${p.cliente}`,testo=`Gentile cliente,\nin allegato la nostra proposta tecnico-economica (${p.numero}).\nRestiamo a disposizione per ogni chiarimento.\n\nCordiali saluti\n${S.me.nome}\nSicuritalia`;
+      m.close();
+      if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:oggetto,text:testo})}catch(e){}}
+      else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=nome;a.click();
+        if(mail)setTimeout(()=>{location.href=`mailto:${encodeURIComponent(mail)}?subject=${encodeURIComponent(oggetto)}&body=${encodeURIComponent(testo)}`},500);
+        toast("PDF scaricato: allegalo alla mail")}
+      pvAppuntamento(id,o,reload);
+    }catch(e){toast(e.message,1)}};
+}
+function pvAzioni(p,o,id,reload,titolo){
+  const m=modal(`<h2>${esc(titolo||"Preventivo "+p.numero)}${closeBtn}</h2><p class="small">${esc(p.cliente)} · ${p.servizi.map(esc).join(", ")}<br>Canone mensile totale <b>${eur(p.totale)} + IVA</b>${p.inviato?`<br><span class="mut">Inviato il ${fmtDT(p.inviato)}${p.inviato_a?" a "+esc(p.inviato_a):""}</span>`:""}</p>
+   <p class="row"><button class="btn" id="pzs">⬇ Scarica PDF</button><button class="btn ok" id="pzi">✉ Invia al cliente</button><button class="btn sec" id="pza">📅 Fissa appuntamento di verifica</button></p>`);
+  $("#pzs",m).onclick=()=>pvScarica(p).catch(e=>toast(e.message,1));
+  $("#pzi",m).onclick=()=>{m.close();pvInvia(p,o,id,reload)};
+  $("#pza",m).onclick=()=>{m.close();pvAppuntamento(id,o,reload)};
+  m.addEventListener("mousedown",()=>{});
+  m.querySelector("[data-x]").addEventListener("click",()=>{if(reload)reload()});
+}
+async function caricaPreventivi(mo,o,id,reload){
+  const box=$("#pvbox",mo);let L=[];
+  try{L=await api(`/opportunities/${id}/preventivi`)}catch(e){box.textContent=e.message;return}
+  box.className="";
+  box.innerHTML=`<p class="row" style="margin:0 0 6px"><button class="btn" id="pvnew">📄 Fai un preventivo</button><span class="small mut">Nel formato Sicuritalia, in PDF, da inviare al cliente.</span></p>
+   ${L.map(p=>`<div class="pvrow small"><b>${esc(p.numero)}</b> · ${esc(p.data_richiesta.split("-").reverse().join("/"))} · ${eur(p.totale)}/mese + IVA<div class="mut">${p.servizi.map(esc).join(", ")}${p.inviato?` · <span style="color:var(--ok)">inviato ${fmtDT(p.inviato)}</span>`:" · non ancora inviato"}</div>
+     <div class="row" style="margin-top:6px"><button class="btn sm sec" data-pv="${p.id}" data-a="s">⬇ PDF</button><button class="btn sm sec" data-pv="${p.id}" data-a="i">✉ Invia</button><button class="btn sm sec" data-pv="${p.id}" data-a="a">📅 Appuntamento</button></div></div>`).join("")}`;
+  const mp={};L.forEach(p=>mp[p.id]=p);
+  box.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{const p=mp[+b.dataset.pv];
+    if(b.dataset.a==="s")pvScarica(p).catch(e=>toast(e.message,1));
+    else if(b.dataset.a==="i"){mo.close();pvInvia(p,o,id,reload)}
+    else{mo.close();pvAppuntamento(id,o,reload)}});
+  $("#pvnew",box).onclick=()=>{mo.close();pvForm(o,id,reload)};
+}
+function pvForm(o,id,reload){
+  const oggi=new Date().toISOString().slice(0,10);
+  const m=modal(`<h2>Preventivo per ${esc(o.cliente)}${closeBtn}</h2>
+   <div class="row" style="gap:8px;flex-wrap:wrap"><div class="grow"><label>Spett.le (cliente)</label><input id="pvc" style="width:100%" value="${esc(o.cliente)}"></div>
+    <div><label>Data della richiesta</label><input type="date" id="pvd" value="${oggi}"></div></div>
+   <label>Indirizzo del cliente</label><input id="pvi" style="width:100%" value="${esc([o.indirizzo,o.localita].filter(Boolean).join(", "))}">
+   <label>Email del cliente (facoltativa, serve per l'invio)</label><input id="pve" type="email" style="width:100%" placeholder="nome@azienda.it">
+   <h3 style="margin-top:14px">Servizi da quotare</h3><div id="pvr"></div>
+   <p class="row"><button class="btn sec" id="pvadd">+ Aggiungi un servizio</button><span class="small mut" id="pvtot"></span></p>
+   <p class="row"><button class="btn ok" id="pvok">Crea il preventivo</button><button class="btn sec" data-x>Annulla</button></p>`,true);
+  const cont=$("#pvr",m);
+  const tot=()=>{let t=0;cont.querySelectorAll(".pvrow").forEach(r=>{const v=String(r.querySelector("[data-k=canone]").value||"").replace(/\./g,"").replace(",",".");t+=parseFloat(v)||0});$("#pvtot",m).textContent=t?"Totale canoni mensili: "+eur(t)+" + IVA":""};
+  const add=()=>{const d=document.createElement("div");d.className="pvrow";
+    d.innerHTML=`<div class="row" style="gap:8px;align-items:end;flex-wrap:wrap"><div class="grow"><label>Servizio richiesto</label><select data-k="servizio" style="width:100%"><option value="">— scegli —</option>${PSERV.map(([k,l])=>`<option value="${k}">${l}</option>`).join("")}</select></div><button class="btn sm ko" data-del title="Togli il servizio">✕</button></div>
+     <div data-campi style="margin-top:6px"></div><div class="row" data-can style="margin-top:6px;display:none"><div><label>Canone mensile (€ + IVA)</label><input data-k="canone" inputmode="decimal" placeholder="es. 350,00" style="width:150px"></div></div>`;
+    cont.appendChild(d);
+    const sel=d.querySelector("[data-k=servizio]");
+    sel.onchange=()=>{d.querySelector("[data-campi]").innerHTML=pvCampi(sel.value);d.querySelector("[data-can]").style.display=sel.value?"":"none";d.querySelectorAll("input").forEach(i=>i.oninput=tot)};
+    d.querySelector("[data-del]").onclick=()=>{d.remove();tot()};
+  };
+  add();$("#pvadd",m).onclick=add;
+  $("#pvok",m).onclick=async()=>{
+    const righe=[...cont.querySelectorAll(".pvrow")].map(d=>{const r={};d.querySelectorAll("[data-k]").forEach(i=>r[i.dataset.k]=i.value);return r}).filter(r=>r.servizio);
+    if(!righe.length){toast("Scegli almeno un servizio",1);return}
+    try{const y=await api(`/opportunities/${id}/preventivi`,{json:{cliente:$("#pvc",m).value,data_richiesta:$("#pvd",m).value,indirizzo:$("#pvi",m).value,email:$("#pve",m).value,righe}});
+      m.close();toast("Preventivo "+y.numero+" creato");
+      const L=await api(`/opportunities/${id}/preventivi`);const p=L.find(x=>x.id===y.id);
+      pvAzioni(p,o,id,reload,"Preventivo "+y.numero+" pronto");
+    }catch(e){toast(e.message,1)}};
+}
+
+/* ------------------------------------------------ agenda */
+const AG={agent_id:""};
+async function pgAgenda(el){
+  const qs=AG.agent_id?"?agent_id="+AG.agent_id:"";
+  const d=await api("/agenda"+qs);
+  el.innerHTML=`<h2>Agenda appuntamenti</h2><div class="card"><div class="row">
+   ${showAgentFilter()?`<div><label>Agente</label><select id="ag">${agentOpts(AG.agent_id,"Tutti i visibili")}</select></div>`:""}
+   ${AG.agent_id||!showAgentFilter()?`<button class="btn" id="prop">✨ Proponi agenda</button>`:""}
+   <span class="small mut">Limite consigliato: ${d.max_giorno} appuntamenti al giorno (si può superare dopo conferma), raggruppati per località.</span></div></div>
+   <div class="card"><div class="row"><div class="grow"><b>📅 Sincronizza con Outlook</b><div class="small mut">Vedi i tuoi appuntamenti e le scadenze SLA nel calendario di Outlook, del telefono o di Google.</div></div><button class="btn sec" id="calb">Collega calendario</button></div></div>
+   ${d.da_ricalendarizzare.length?`<div class="card"><h3>Da ricalendarizzare (${d.da_ricalendarizzare.length})</h3>${d.da_ricalendarizzare.map(o=>item(o,o.motivo)).join("")}</div>`:""}
+   ${d.giorni.map(g=>{const byLoc={};g.items.forEach(o=>(byLoc[o.localita||"Senza località"]=byLoc[o.localita||"Senza località"]||[]).push(o));
+    return `<div class="card day"><h3><span>${fmtD(g.data)}</span><span class="badge ${g.items.length>d.max_giorno?"b-scad":""}">${g.items.length}/${d.max_giorno}</span></h3>${Object.entries(byLoc).map(([l,arr])=>`<div class="loc">📍 ${esc(l)}</div>${arr.map(o=>item(o)).join("")}`).join("")}</div>`}).join("")||'<div class="card mut">Nessun appuntamento in agenda.</div>'}`;
+  function item(o,extra){return `<div class="item" data-id="${o.id}"><div><b>${esc(o.cliente)}</b><div class="small mut">${esc(o.localita)}${o.agente&&S.agenti.length>1?" · "+esc(o.agente):""}${extra?` · <span style="color:var(--warn)">${extra}</span>`:""}</div></div><div>${o.appuntamento&&o.stato==="appuntamento"?`<b>${o.appuntamento.slice(11,16)}</b>`:badge(o.stato)}</div></div>`}
+  el.querySelectorAll(".item").forEach(i=>i.onclick=()=>openOpp(+i.dataset.id,()=>pgAgenda(el)));
+  if($("#calb"))$("#calb").onclick=calendarioModal;
+  if($("#ag"))$("#ag").onchange=e=>{AG.agent_id=e.target.value;pgAgenda(el)};
+  if($("#prop"))$("#prop").onclick=async()=>{
+    const aid=AG.agent_id||S.me.id;
+    try{const p=await api("/agenda/proposta?agent_id="+aid);
+      if(!p.length)return toast("Nessuna opportunità da pianificare");
+      const m=modal(`<h2>Proposta agenda${closeBtn}</h2><p class="small mut">Opportunità raggruppate per località. Modifica data e ora se serve, poi conferma.</p><div class="tw"><table><tr><th>Cliente</th><th>Località</th><th>Data</th><th>Ora</th></tr>
+        ${p.map((x,i)=>`<tr><td>${esc(x.cliente)}</td><td>${esc(x.localita)}</td><td><input type="date" data-i="${i}" data-k="data" value="${x.data}"></td><td><input type="time" data-i="${i}" data-k="ora" value="${x.ora}"></td></tr>`).join("")}</table></div>
+        <p><button class="btn" id="cf">Conferma ${p.length} appuntamenti</button></p>`,true);
+      m.querySelectorAll("input[data-i]").forEach(i=>i.onchange=()=>{p[+i.dataset.i][i.dataset.k]=i.value});
+      $("#cf",m).onclick=async()=>{try{const r=await api("/agenda/proposta/conferma",{json:{items:p}});m.close();toast(`${r.fissati} fissati${r.errori.length?" · "+r.errori.length+" con errori: "+r.errori[0]:""}`,r.errori.length>0);pgAgenda(el)}catch(e){toast(e.message,1)}};
+    }catch(e){toast(e.message,1)}};
+}
+
+/* ------------------------------------------------ messaggi e documenti */
+const kb=n=>n>=1048576?(n/1048576).toFixed(1).replace(".",",")+" MB":Math.max(1,Math.round(n/1024))+" KB";
+const iconaF=m=>/^image\//.test(m)?"🖼️":m==="application/pdf"?"📕":/sheet|excel|csv/.test(m)?"📊":/word|document/.test(m)?"📝":"📄";
+const fileLink=f=>`<a href="/api/file/${f.id}" title="Scarica" style="text-decoration:none">${iconaF(f.mime)} ${esc(f.nome)}</a> <span class="small mut">${kb(f.dimensione)}</span>${/^image\/|pdf$/.test(f.mime)?` <a class="small" href="/api/file/${f.id}?anteprima=1" target="_blank" rel="noopener">apri</a>`:""}`;
+async function pgMessaggi(el,cart){
+  cart=cart||"ricevuti";const invia=can("messaggi_invia");
+  const L=await api("/messaggi"+(cart==="inviati"?"?cartella=inviati":""));
+  el.innerHTML=`<div class="top"><h2>Messaggi</h2>${invia?'<button class="btn" id="mnew">✉️ Nuovo messaggio</button>':""}</div>
+  ${invia?`<div class="row" style="margin-bottom:10px"><button class="btn ${cart==="ricevuti"?"":"sec"} sm" data-c="ricevuti">Ricevuti</button><button class="btn ${cart==="inviati"?"":"sec"} sm" data-c="inviati">Inviati</button></div>`:""}
+  <div class="card">${L.map(m=>`<div class="item" data-id="${m.id}" style="${cart==="ricevuti"&&!m.letto?"border-left:4px solid var(--pri)":""}">
+    <div class="row" style="justify-content:space-between"><div><b>${cart==="ricevuti"&&!m.letto?"● ":""}${esc(m.titolo)}</b>${m.n_allegati?` <span class="small mut">📎 ${m.n_allegati}</span>`:""}</div><div class="small mut">${fmtDT(m.creato)}</div></div>
+    <div class="small mut">${cart==="ricevuti"?"Da "+esc(m.mittente):"A "+m.n_dest+" persone · letto da "+m.n_letti}${m.anteprima?" — "+esc(m.anteprima):""}</div></div>`).join("")||'<div class="mut">Nessun messaggio</div>'}</div>`;
+  el.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>pgMessaggi(el,b.dataset.c));
+  el.querySelectorAll(".item").forEach(i=>i.onclick=()=>apriMessaggio(+i.dataset.id,()=>pgMessaggi(el,cart)));
+  if($("#mnew",el))$("#mnew",el).onclick=()=>nuovoMessaggio(()=>pgMessaggi(el,"inviati"));
+}
+async function apriMessaggio(id,reload){
+  const m=await api("/messaggi/"+id);
+  const mo=modal(`<h2>${esc(m.titolo)}${closeBtn}</h2><div class="small mut">Da ${esc(m.mittente)} · ${fmtDT(m.creato)}</div>
+   <div style="white-space:pre-wrap;margin:12px 0">${esc(m.testo)}</div>
+   ${m.allegati.length?`<h3>Allegati</h3>${m.allegati.map(f=>`<div class="row" style="margin:4px 0">${fileLink(f)}${can("documenti")?` <button class="btn sec sm" data-sv="${f.id}">Salva nei miei documenti</button>`:""}</div>`).join("")}`:""}
+   ${m.destinatari?`<h3 style="margin-top:14px">Destinatari (${m.destinatari.length}) · letto da ${m.destinatari.filter(d=>d.letto).length}</h3><div class="small" style="max-height:180px;overflow:auto">${m.destinatari.map(d=>`<div>${d.letto?"✔":"○"} ${esc(d.nome)} <span class="mut">${esc(d.ruolo)}${d.letto?" · letto "+fmtDT(d.letto):""}</span></div>`).join("")}</div>`:""}
+   ${m.mio||S.me.ruolo==="admin"?'<p><button class="btn ko sm" id="mdel">Elimina messaggio</button></p>':""}`);
+  mo.querySelectorAll("[data-sv]").forEach(b=>b.onclick=async()=>{try{await api(`/file/${b.dataset.sv}/salva`,{json:{}});toast("Salvato nei tuoi documenti")}catch(e){toast(e.message,1)}});
+  if($("#mdel",mo))$("#mdel",mo).onclick=async()=>{if(!confirm("Eliminare il messaggio e i suoi allegati per tutti i destinatari?"))return;await api("/messaggi/"+id,{method:"DELETE"});mo.close();toast("Messaggio eliminato");reload&&reload()};
+  if(reload&&!m.mio)reload();
+}
+async function nuovoMessaggio(fatto){
+  const D=await api("/messaggi/destinatari");let scelti=[];
+  const cnt=k=>D.filter(d=>d.ruolo===k).length;
+  const mo=modal(`<h2>Nuovo messaggio${closeBtn}</h2>
+   <label>A chi</label><select id="mmodo" style="width:100%"><option value="tutti">Tutti i miei venditori (${D.filter(d=>d.ruolo!=="ufficio_disdette").length})</option>
+    ${cnt("agente")?`<option value="agente">Solo agenti (${cnt("agente")})</option>`:""}${cnt("recuperatore")?`<option value="recuperatore">Solo recuperatori disdette (${cnt("recuperatore")})</option>`:""}${cnt("team_leader")?`<option value="team_leader">Solo team leader (${cnt("team_leader")})</option>`:""}${cnt("district")?`<option value="district">Solo district (${cnt("district")})</option>`:""}
+    <option value="scelti">Scelgo io le persone…</option></select><div id="msc" class="small mut" style="margin:4px 0"></div>
+   <label>Oggetto</label><input id="mti" style="width:100%" maxlength="150" placeholder="es. Nuova campagna antifurto — da lunedì">
+   <label>Messaggio</label><textarea id="mte" rows="6" style="width:100%" placeholder="Scrivi le informazioni per la tua squadra…"></textarea>
+   <label>Allegati (max 10 file, 15 MB ciascuno)</label><input type="file" id="mfi" multiple style="width:100%">
+   <p class="row"><button class="btn" id="msend">Invia</button><span class="small mut">I destinatari ricevono una notifica.</span></p><div id="merr" class="small" style="color:var(--ko)"></div>`);
+  const pick=()=>multiPick({titolo:"Scegli i destinatari",tutti:"Nessuno",sel:scelti,
+    voci:D.map(d=>({id:d.id,label:d.nome,sub:d.ruolo_label,gruppo:d.riferimento?"Fa capo a "+d.riferimento:"Diretti"})).sort((a,b)=>(a.gruppo||"").localeCompare(b.gruppo||"")),
+    onOk:v=>{scelti=v.map(Number);$("#msc",mo).textContent=scelti.length+" persone scelte"}});
+  $("#mmodo",mo).onchange=e=>{if(e.target.value==="scelti")pick();else{$("#msc",mo).textContent=""}};
+  $("#msend",mo).onclick=async()=>{const b=$("#msend",mo);const f=new FormData();f.append("titolo",$("#mti",mo).value);f.append("testo",$("#mte",mo).value);
+    const modo=$("#mmodo",mo).value;f.append("modo",modo);if(modo==="scelti")f.append("ids",JSON.stringify(scelti));
+    for(const x of $("#mfi",mo).files)f.append("file",x);
+    b.disabled=true;$("#merr",mo).textContent="Invio in corso…";
+    try{const r=await api("/messaggi",{form:f});mo.close();toast("Inviato a "+r.destinatari+" persone"+(r.allegati?" con "+r.allegati+" allegati":"")+(r.errori.length?" — "+r.errori.join("; "):""),!!r.errori.length);fatto&&fatto()}
+    catch(e){$("#merr",mo).textContent=e.message;b.disabled=false}};
+}
+async function pgDocumenti(el){
+  const D=await api("/documenti");
+  const up=(amb)=>`<div class="row" style="margin:8px 0">${amb==="comune"&&S.me.ruolo==="admin"?`<select id="uarea"><option value="">Tutte le aree</option>${D.aree.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join("")}</select>`:""}${amb==="comune"?'<input id="ucart" placeholder="Cartella (facoltativa, es. Moduli)" style="width:220px">':""}<input type="file" id="u_${amb}" multiple class="grow"><button class="btn" data-up="${amb}">⬆ Carica</button></div>`;
+  const perc=Math.min(100,Math.round(100*D.usato/D.quota));
+  const cartelle=[...new Set(D.comuni.map(f=>f.cartella||""))].sort((a,b)=>a.localeCompare(b));
+  el.innerHTML=`<h2>Documenti</h2>
+  <div class="card"><h3>📚 Area comune</h3><p class="small mut" style="margin-top:0">Documenti a disposizione di tutti: moduli, listini, procedure, presentazioni.</p>
+   ${D.puo_pubblicare?up("comune"):""}
+   ${D.comuni.length?cartelle.map(cn=>`${cn?`<div class="small mut" style="margin:10px 0 2px;font-weight:600">📂 ${esc(cn)}</div>`:cartelle.length>1?'<div class="small mut" style="margin:10px 0 2px;font-weight:600">Senza cartella</div>':""}<div class="tw"><table class="small">${D.comuni.filter(f=>(f.cartella||"")===cn).map(f=>`<tr><td>${fileLink(f)}</td><td class="mut">${esc(f.autore)}${S.me.ruolo==="admin"?" · "+esc(f.area):""}</td><td class="mut">${fmtDT(f.creato)}</td><td style="white-space:nowrap">${can("documenti")?`<button class="btn sec sm" data-sv="${f.id}">Salva nei miei</button> `:""}${f.eliminabile?`<button class="btn ko sm" data-del="${f.id}">Elimina</button>`:""}</td></tr>`).join("")}</table></div>`).join(""):'<div class="mut small">Nessun documento nell\'area comune</div>'}</div>
+  <div class="card"><h3>🔒 I miei documenti</h3><p class="small mut" style="margin-top:0">Il tuo spazio personale: li vedi solo tu. Usalo per salvare gli allegati ricevuti, offerte, contratti e materiale di lavoro.</p>
+   <div class="small mut">Spazio usato: ${kb(D.usato)} su ${kb(D.quota)}</div><div style="height:6px;background:#0001;border-radius:4px;margin:4px 0 8px"><div style="height:6px;width:${perc}%;background:${perc>85?"var(--ko)":"var(--pri)"};border-radius:4px"></div></div>
+   ${up("personale")}
+   <div class="tw"><table class="small">${D.personali.map(f=>`<tr><td>${fileLink(f)}</td><td class="mut">${fmtDT(f.creato)}</td><td><button class="btn ko sm" data-del="${f.id}">Elimina</button></td></tr>`).join("")||'<tr><td class="mut">Nessun documento salvato</td></tr>'}</table></div></div>`;
+  el.querySelectorAll("[data-up]").forEach(b=>b.onclick=async()=>{const amb=b.dataset.up,fi=$("#u_"+amb,el).files;if(!fi.length){toast("Scegli almeno un file",1);return}
+    const f=new FormData();f.append("ambito",amb);for(const x of fi)f.append("file",x);if(amb==="comune"){f.append("cartella",$("#ucart",el).value);if($("#uarea",el))f.append("area_id",$("#uarea",el).value)}
+    b.disabled=true;try{const r=await api("/documenti",{form:f});toast(r.salvati+" file caricati"+(r.errori.length?" — "+r.errori.join("; "):""),!!r.errori.length);pgDocumenti(el)}catch(e){toast(e.message,1);b.disabled=false}});
+  el.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(!confirm("Eliminare il documento?"))return;try{await api("/documenti/"+b.dataset.del,{method:"DELETE"});pgDocumenti(el)}catch(e){toast(e.message,1)}});
+  el.querySelectorAll("[data-sv]").forEach(b=>b.onclick=async()=>{try{await api(`/file/${b.dataset.sv}/salva`,{json:{}});toast("Salvato nei tuoi documenti");pgDocumenti(el)}catch(e){toast(e.message,1)}});
+}
+
+/* ------------------------------------------------ verifica duplicati */
+const LIVD={certo:"Già presente",probabile:"Probabilmente già presente",indirizzo:"Stesso indirizzo",simile:"Nome simile"};
+const dupBadge=(txt,liv)=>txt?`<div class="dup ${liv==="certo"?"certo":""}" title="${esc(txt)}">⚠ ${esc(txt.length>150?txt.slice(0,147)+"…":txt)}</div>`:"";
+const dupLiv=t=>!t?"":/^Probabile:|^Nome simile:|^Stesso indirizzo:/.test(t)?"":"certo";
+function selAreaHtml(){return S.me.ruolo==="admin"?`<div><label>Area</label><select id="varea">${S.meta.aree.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join("")}</select></div>`:""}
+function tabDup(L){return `<div class="tw" style="max-height:420px;overflow:auto"><table class="small"><tr><th>Riga</th><th>Cliente</th><th>Esito</th><th>Dove è già presente</th></tr>
+  ${L.map(x=>`<tr class="rowdup ${x.livello}"><td>${x.riga}</td><td><b>${esc(x.cliente)}</b><div class="mut">${esc(x.telefono||"")}</div></td><td><span class="dup ${x.livello==="certo"?"certo":""}">${LIVD[x.livello]}</span>${x.in_lavorazione?'<div><span class="dup certo" title="Un altro venditore sta già lavorando questo cliente">🚫 già in lavorazione</span></div>':(x.forse_lavorazione?'<div><span class="dup" title="Il nome è simile a quello di un prospect già aperto da un altro venditore: controlla">forse già in lavorazione</span></div>':"")}</td>
+   <td>${x.corrispondenze.map(m=>`<div>${esc(m.info)}${m.nome&&m.nome!==x.cliente?` <span class="mut">(${esc(m.nome)})</span>`:""} <span class="mut">· ${esc(m.motivo)}</span></div>`).join("")}</td></tr>`).join("")}</table></div>`}
+async function pgVerifica(el){
+  el.innerHTML=`<h2>Verifica clienti</h2><div class="card"><p class="small mut" style="margin-top:0">Controlla se dei nominativi sono <b>già clienti</b> (customer base dell'area), già in una <b>campagna</b> o già <b>proposti o in lavorazione da un altro venditore</b> (prospect aperti inclusi, così due agenti non vanno dallo stesso cliente). Il confronto usa partita IVA/codice fiscale, telefono e nome (anche scritto in modo diverso, ad esempio «Rossi S.r.l.» e «ROSSI SRL»).</p>
+  <div class="row">${selAreaHtml()}<div class="grow"><label>Carica un file Excel/CSV (colonna «Cliente», facoltative «Telefono» e «P.IVA»)</label><input type="file" id="vf" accept=".xlsx,.xlsm,.csv" style="width:100%"></div></div>
+  <label>…oppure incolla un elenco (un cliente per riga: <i>nome; telefono; partita IVA</i>)</label><textarea id="vt" rows="5" style="width:100%" placeholder="Mario Rossi Srl; 0421 123456; 01234567890"></textarea>
+  <p class="row"><button class="btn" id="vgo">Verifica</button><button class="btn sec" id="vx" disabled>⬇ Scarica risultato (Excel)</button></p><div id="vres"></div></div>`;
+  const fd=()=>{const f=new FormData();const file=$("#vf",el).files[0];if(file)f.append("file",file);else f.append("testo",$("#vt",el).value);if($("#varea",el))f.append("area_id",$("#varea",el).value);return f};
+  $("#vgo",el).onclick=async()=>{const b=$("#vgo",el);b.disabled=true;$("#vres",el).innerHTML='<div class="mut small">Controllo in corso…</div>';
+    try{const r=await api("/verifica",{form:fd()});
+      $("#vres",el).innerHTML=`<p><b>${r.totale}</b> controllati · <b style="color:${r.duplicati?"var(--warn)":"var(--ok)"}">${r.duplicati}</b> già presenti · ${r.totale-r.duplicati} nuovi ${r.customer_base?"":'<span class="small mut">(la customer base dell\'area non è ancora stata caricata)</span>'}</p>
+       ${r.in_lavorazione?`<div class="card" style="background:#fff1f0;box-shadow:none;border:1px solid #ffccc7;padding:10px 14px;margin-bottom:10px"><b style="color:var(--ko)">${r.in_lavorazione} ${r.in_lavorazione===1?"cliente è già in lavorazione":"clienti sono già in lavorazione"} da un altro venditore.</b> Non andarci: parlane prima con il tuo responsabile, così due persone non si presentano dallo stesso cliente.</div>`:""}
+       ${r.duplicati?tabDup(r.righe.filter(x=>x.livello)):'<div style="color:var(--ok)">Nessun nominativo risulta già presente.</div>'}`;$("#vx",el).disabled=false}
+    catch(e){$("#vres",el).innerHTML=`<span style="color:var(--ko)">${esc(e.message)}</span>`}b.disabled=false};
+  $("#vx",el).onclick=async()=>{const r=await api("/verifica.xlsx",{form:fd(),raw:true});if(!r.ok){toast("Errore nel file",1);return}
+    const a=document.createElement("a");a.href=URL.createObjectURL(await r.blob());a.download="verifica_clienti.xlsx";a.click()};
+}
+async function pgCB(el){
+  const area=()=>$("#varea",el)?"?area_id="+$("#varea",el).value:"";
+  const draw=async()=>{const d=await api("/customerbase"+area());
+    $("#cbinfo",el).innerHTML=`<p><b style="font-size:20px">${d.totale.toLocaleString("it-IT")}</b> clienti in elenco ${d.storia[0]?`· ultimo aggiornamento <b>${fmtDT(d.storia[0].quando)}</b> (${esc(d.storia[0].utente||"")}, file ${esc(d.storia[0].file||"")})`:'· <span style="color:var(--warn)">nessuna customer base caricata</span>'}</p>
+     ${d.storia.length?`<div class="tw"><table class="small"><tr><th>Data</th><th>Chi</th><th>File</th><th>Modo</th><th>Totale</th><th>Nuovi</th><th>Rimossi</th><th>Modificati</th></tr>${d.storia.map(b=>`<tr><td>${fmtDT(b.quando)}</td><td>${esc(b.utente||"")}</td><td>${esc(b.file)}</td><td>${b.modo==="aggiungi"?"Aggiunta":"Sostituzione"}</td><td>${b.totale}</td><td>${b.nuovi}</td><td>${b.rimossi}</td><td>${b.aggiornati}</td></tr>`).join("")}</table></div>`:""}`};
+  el.innerHTML=`<h2>Customer base</h2><div class="card"><p class="small mut" style="margin-top:0">L'elenco <b>completo</b> dei clienti dell'area. Serve a controllare che prospect, lead e campagne non riguardino persone che sono già clienti. Quando la customer base cambia, carica di nuovo il file aggiornato: vedrai prima cosa cambia (nuovi, usciti, modificati) e poi confermi. Dopo l'aggiornamento le proposte in attesa e i prospect ancora aperti vengono ricontrollati.</p>
+   <div class="row">${selAreaHtml()}<a class="btn sec" href="/api/customerbase/modello.xlsx" style="text-decoration:none">⬇ Modello Excel</a><a class="btn sec" id="cbexp" href="/api/customerbase/esporta.xlsx" style="text-decoration:none">⬇ Elenco attuale</a></div><div id="cbinfo" style="margin-top:10px"></div></div>
+   <div class="card"><h3>Carica o aggiorna la customer base</h3><p class="small mut" style="margin-top:0">Colonne riconosciute: <b>Cliente</b> (obbligatoria), <b>P.IVA / Codice fiscale</b>, <b>Telefono</b>, Località, Indirizzo. Più dati ci sono, più il controllo è preciso.</p>
+   <div class="row"><input type="file" id="cbf" accept=".xlsx,.xlsm,.csv" class="grow"><button class="btn" id="cbgo">Controlla il file</button></div><div id="cbprev" style="margin-top:10px"></div></div>`;
+  if($("#varea",el))$("#varea",el).onchange=()=>{$("#cbexp",el).href="/api/customerbase/esporta.xlsx"+area();$("#cbprev",el).innerHTML="";draw()};
+  $("#cbexp",el).href="/api/customerbase/esporta.xlsx"+area();
+  await draw();
+  $("#cbgo",el).onclick=async()=>{const f=$("#cbf",el).files[0];if(!f){toast("Scegli il file",1);return}
+    const fm=new FormData();fm.append("file",f);if($("#varea",el))fm.append("area_id",$("#varea",el).value);
+    const b=$("#cbgo",el);b.disabled=true;$("#cbprev",el).innerHTML='<div class="mut small">Lettura del file…</div>';
+    try{const p=await api("/customerbase/anteprima",{form:fm});
+      const prima=p.attuale===0;
+      $("#cbprev",el).innerHTML=`<div class="card" style="background:var(--bg2,#f5f5f7);box-shadow:none"><h3 style="margin-top:0">Anteprima: ${esc(p.file)}</h3>
+       <p>${p.totale.toLocaleString("it-IT")} clienti nel file · ${p.attuale.toLocaleString("it-IT")} nell'elenco attuale</p>
+       <div class="row" style="gap:18px"><div><b style="color:var(--ok);font-size:20px">${p.nuovi}</b><div class="small mut">nuovi</div></div><div><b style="color:${p.rimossi?"var(--ko)":"inherit"};font-size:20px">${p.rimossi}</b><div class="small mut">non più presenti</div></div><div><b style="font-size:20px">${p.aggiornati}</b><div class="small mut">modificati</div></div><div><b style="font-size:20px">${p.invariati}</b><div class="small mut">invariati</div></div></div>
+       ${p.esempio_nuovi.length?`<div class="small" style="margin-top:8px"><b>Nuovi, ad esempio:</b> ${p.esempio_nuovi.map(esc).join(", ")}</div>`:""}
+       ${p.esempio_rimossi.length?`<div class="small"><b>Usciti, ad esempio:</b> ${p.esempio_rimossi.map(esc).join(", ")}</div>`:""}
+       ${p.senza_identificativo?`<div class="small" style="color:var(--warn)">${p.senza_identificativo} clienti senza P.IVA né telefono: verranno riconosciuti solo dal nome.</div>`:""}
+       ${p.doppi_nel_file?`<div class="small" style="color:var(--warn)">${p.doppi_nel_file} righe doppie nel file: ne tengo una sola.</div>`:""}${p.senza_nome?`<div class="small" style="color:var(--warn)">${p.senza_nome} righe senza nome ignorate.</div>`:""}
+       <p class="row"><button class="btn ok" id="cbok">${prima?"Carica la customer base":"Conferma: il file è l'elenco completo (sostituisce l'attuale)"}</button>${!prima?'<button class="btn sec" id="cbadd">Aggiungi soltanto (non togliere nessuno)</button>':""}<button class="btn sec" id="cbno">Annulla</button></p></div>`;
+      const fine=async modo=>{try{const r=await api("/customerbase/conferma",{json:{token:p.token,modo}});
+        const rc=r.ricontrollo;toast("Customer base aggiornata: "+r.totale+" clienti");
+        $("#cbprev",el).innerHTML=`<div class="card" style="box-shadow:none"><b style="color:var(--ok)">Aggiornamento completato.</b> +${r.nuovi} nuovi · −${r.rimossi} usciti · ${r.aggiornati} modificati.
+          ${rc.proposte||rc.opportunita?`<div style="margin-top:8px;color:var(--warn)"><b>Attenzione:</b> ${rc.proposte} proposte in attesa e ${rc.opportunita} opportunità prospect ora risultano già clienti${rc.elenco.length?": "+rc.elenco.slice(0,12).map(esc).join(", ")+(rc.elenco.length>12?"…":""):""}. Le trovi segnalate in Proposte e Opportunità.</div>`:'<div class="small mut" style="margin-top:6px">Nessuna proposta o prospect aperto coincide con la nuova customer base.</div>'}</div>`;
+        $("#cbf",el).value="";draw()}catch(e){toast(e.message,1)}};
+      $("#cbok",el).onclick=()=>fine("sostituisci");if($("#cbadd",el))$("#cbadd",el).onclick=()=>fine("aggiungi");$("#cbno",el).onclick=()=>$("#cbprev",el).innerHTML=""}
+    catch(e){$("#cbprev",el).innerHTML=`<span style="color:var(--ko)">${esc(e.message)}</span>`}b.disabled=false};
+}
+
+/* ------------------------------------------------ campagne */
+async function pgCampagne(el){
+  const list=can("opportunita")?await api("/campaigns"):[];
+  el.innerHTML=`<h2>Campagne</h2>
+  <div class="card"><h3>Importa lista da controllo commesse</h3><p class="small mut">Carica il file Excel/CSV: le opportunità vengono assegnate secondo la regola scelta. L'agente riceve la notifica, District e Team Leader in conoscenza.</p>
+  <form id="imp"><div class="row"><div class="grow"><label>Nome campagna</label><input name="nome" required style="width:100%"></div>
+   <div><label>Categoria</label><select name="categoria" id="icat">${S.meta.categorie.map(c=>`<option value="${c}">${CAT[c]}</option>`).join("")}</select></div>
+   <div id="isub" class="hide"><label>Tipo prospect</label><select name="sottotipo">${S.meta.sottotipi.map(c=>`<option value="${c}">${SOTTO[c]}</option>`).join("")}</select></div>
+   ${S.me.ruolo==="admin"?`<div><label>Area</label><select name="area_id">${S.meta.aree.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join("")}</select></div>`:""}
+   <div><label>Regola di invio</label><select name="regola">${S.meta.regole.map(r=>`<option value="${r}" ${S.meta.settings.regola_default===r?"selected":""}>${REG[r]}</option>`).join("")}</select></div></div>
+   <label>File (.xlsx o .csv)</label><input type="file" name="file" accept=".xlsx,.xlsm,.csv" required>
+   <p class="row"><button class="btn">Importa</button><a class="btn sec" href="/api/template.xlsx" style="text-decoration:none">⬇ Scarica modello</a></p><div id="ires" class="small"></div></form></div>
+  ${can("opportunita")?`<div class="card"><h3>Campagne</h3><div class="tw"><table><tr><th>Campagna</th><th>Categoria</th><th>Area</th><th>Totale</th><th>Da gestire</th><th>In corso</th><th>Contratti</th><th>KO</th><th>Creata</th></tr>
+  ${list.map(c=>`<tr><td>${esc(c.nome)}</td><td>${CAT[c.categoria]}${c.sottotipo?" · "+SOTTO[c.sottotipo]:""}</td><td class="small">${esc(c.area||"")}</td><td>${c.totale}</td><td>${c.da_gestire}</td><td>${c.in_corso}</td><td>${c.contratti}</td><td>${c.ko}</td><td class="small mut">${fmtDT(c.creato)}</td></tr>`).join("")||'<tr><td colspan="9" class="mut">Nessuna campagna</td></tr>'}</table></div></div>`:""}`;
+  $("#icat").onchange=e=>$("#isub").classList.toggle("hide",e.target.value!=="prospect");
+  const mostraRis=r=>{$("#ires").innerHTML=`<div style="color:var(--ok)"><b>${r.creati}</b> opportunità create · ${r.assegnati} assegnate · ${r.non_assegnati} da assegnare</div>${r.duplicati?`<div style="color:var(--warn)">⚠ ${r.duplicati} segnalate come già presenti (le vedi nell'opportunità)</div>`:""}${r.saltati?`<div style="color:var(--warn)">${r.saltati} righe già presenti non importate</div>`:""}${Object.entries(r.per_agente).map(([k,v])=>`<div>${esc(k)}: ${v}</div>`).join("")}${r.avvisi.slice(0,8).map(a=>`<div style="color:var(--warn)">${esc(a)}</div>`).join("")}`;
+    setTimeout(()=>pgCampagne(el),5000)};
+  $("#imp").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button.btn");b.disabled=true;
+    try{const fa=new FormData(e.target);fa.append("anteprima","1");
+      $("#ires").innerHTML='<div class="mut">Controllo se i clienti sono già presenti in altre liste…</div>';
+      const a=await api("/campaigns/import",{form:fa});
+      const vai=async dup=>{const f=new FormData(e.target);f.append("duplicati",dup);$("#ires").innerHTML='<div class="mut">Importazione…</div>';
+        try{mostraRis(await api("/campaigns/import",{form:f}))}catch(x){$("#ires").innerHTML=`<span style="color:var(--ko)">${esc(x.message)}</span>`}};
+      if(!a.duplicati){await vai("segnala");b.disabled=false;return}
+      $("#ires").innerHTML=`<div class="card" style="border:2px solid #f5d79e;box-shadow:none"><h3 style="margin-top:0;color:#a15c00">⚠ ${a.duplicati} clienti su ${a.righe} risultano già presenti</h3>
+        <p class="small mut" style="margin-top:0">${a.controllo_customer_base?"Il confronto è fatto con la customer base, le altre campagne, le proposte in attesa e i doppioni dentro al file.":"Il confronto è fatto con le altre campagne, le proposte in attesa e i doppioni dentro al file."} ${a.elenco.length<a.duplicati?"Mostro i primi "+a.elenco.length+".":""}</p>
+        ${tabDup(a.elenco)}
+        <p class="row"><button class="btn ok" id="dupsk">Importa solo i nuovi (salta ${a.forti} già presenti)</button><button class="btn sec" id="dupall">Importa tutti e segnala i duplicati</button><button class="btn sec" id="dupno">Annulla</button></p></div>`;
+      $("#dupsk").onclick=()=>vai("salta");$("#dupall").onclick=()=>vai("segnala");$("#dupno").onclick=()=>$("#ires").innerHTML=""}
+    catch(x){$("#ires").innerHTML=`<span style="color:var(--ko)">${esc(x.message)}</span>`}b.disabled=false};
+}
+
+/* ------------------------------------------------ notifiche */
+async function pgNotifiche(el){
+  const l=await api("/notifications");
+  el.innerHTML=`<div class="top"><h2>Notifiche</h2><button class="btn sec sm" id="rall">Segna tutte come lette</button></div><div class="card">
+  ${l.map(n=>`<div class="item" data-id="${n.id}" data-o="${n.opp_id||""}" style="${n.letta?"opacity:.6":"border-left:4px solid "+(n.tipo==="sla"?"var(--ko)":"var(--pri)")}"><div>${n.tipo==="sla"?"⏰ ":"📌 "}${esc(n.messaggio)}</div><div class="small mut">${fmtDT(n.quando)}</div></div>`).join("")||'<div class="mut">Nessuna notifica</div>'}</div>`;
+  $("#rall").onclick=async()=>{await api("/notifications/read",{json:{}});setUnread(0);pgNotifiche(el)};
+  el.querySelectorAll(".item").forEach(i=>i.onclick=async()=>{await api("/notifications/read",{json:{ids:[+i.dataset.id]}});
+    const rest=l.filter(n=>!n.letta&&n.id!==+i.dataset.id).length;setUnread(rest);
+    const nn=l.find(n=>n.id===+i.dataset.id);if(nn&&nn.tipo==="messaggio"){go(can("messaggi")?"messaggi":"documenti");return}
+    if(i.dataset.o&&can("opportunita"))openOpp(+i.dataset.o,()=>pgNotifiche(el));else pgNotifiche(el)});
+  setUnread(l.filter(n=>!n.letta).length);
+}
+
+/* ------------------------------------------------ mappa */
+const COL={contratti:"#16a34a",ko:"#dc2626",aperte:"#2563eb"};
+let LMAP=null,LLOAD=null;
+const LSRC=[["/static/leaflet/leaflet.css","/static/leaflet/leaflet.js"],
+ ["https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css","https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"],
+ ["https://unpkg.com/leaflet@1.9.4/dist/leaflet.css","https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"],
+ ["https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css","https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"]];
+function loadLeaflet(){
+  if(window.L)return Promise.resolve(true);
+  if(LLOAD)return LLOAD;
+  LLOAD=(async()=>{
+    for(const [cssU,jsU] of LSRC){
+      const ok=await new Promise(res=>{
+        const css=document.createElement("link");css.rel="stylesheet";css.href=cssU;document.head.appendChild(css);
+        const sc=document.createElement("script");sc.src=jsU;const t=setTimeout(()=>{sc.remove();res(false)},7000);
+        sc.onload=()=>{clearTimeout(t);res(!!window.L)};sc.onerror=()=>{clearTimeout(t);sc.remove();res(false)};document.head.appendChild(sc)});
+      if(ok)return true}
+    LLOAD=null;return false})();   // se fallisce, al prossimo tentativo si riprova
+  return LLOAD;
+}
+function pieInner(p,size){
+  const tot=p.contratti+p.ko+p.aperte,r=size/2;let a0=-Math.PI/2,g="";
+  [["contratti"],["ko"],["aperte"]].forEach(([k])=>{const v=p[k];if(!v)return;const c=COL[k];
+    if(v===tot){g+=`<circle cx="${r}" cy="${r}" r="${r-1}" fill="${c}"/>`;return}
+    const a1=a0+2*Math.PI*v/tot,R=r-1;
+    g+=`<path d="M${r} ${r}L${r+R*Math.cos(a0)} ${r+R*Math.sin(a0)}A${R} ${R} 0 ${a1-a0>Math.PI?1:0} 1 ${r+R*Math.cos(a1)} ${r+R*Math.sin(a1)}Z" fill="${c}"/>`;a0=a1});
+  return g+`<circle cx="${r}" cy="${r}" r="${r-1}" fill="none" stroke="#fff" stroke-width="2"/><text x="${r}" y="${r+4}" text-anchor="middle" font-size="${Math.max(10,size/3)}" font-weight="700" fill="#fff" style="paint-order:stroke;stroke:#000a;stroke-width:2.5px">${tot}</text>`;
+}
+const pieSize=p=>Math.round(24+Math.min(28,5*Math.sqrt(p.contratti+p.ko+p.aperte)));
+const popTxt=p=>`<b>${esc(p.comune)} (${esc(p.sigla)})</b><br><span style="color:${COL.contratti}">●</span> Contratti: <b>${p.contratti}</b><br><span style="color:${COL.ko}">●</span> KO: <b>${p.ko}</b><br><span style="color:${COL.aperte}">●</span> Opportunità/prospect in corso: <b>${p.aperte}</b>`;
+const MAPPREF={cartina:true,zone:false};
+async function drawMap(box,d){
+  const nz=d.zone.length;
+  const leg=`<div class="row small" style="margin-bottom:8px;align-items:center"><span><span style="color:${COL.contratti}">●</span> Contratti</span><span><span style="color:${COL.ko}">●</span> KO</span><span><span style="color:${COL.aperte}">●</span> Opportunità e prospect in corso</span>
+    ${MAPPREF.zone&&nz?`<span><span style="color:#0a84ff">●</span> Zone di lavoro</span>`:""}
+    <label class="chk" style="margin:0 0 0 auto"><input type="checkbox" id="mt" ${MAPPREF.cartina?"checked":""}> Cartina</label>
+    <label class="chk" style="margin:0" title="${nz?"":"Per gli agenti scelti non sono state impostate zone di lavoro"}"><input type="checkbox" id="mz" ${MAPPREF.zone&&nz?"checked":""} ${nz?"":"disabled"}> Zone di lavoro${nz?` (${nz} comuni)`:" (nessuna impostata)"}</label></div>`;
+  box.innerHTML=leg+`<div id="mapc" style="height:430px;border-radius:10px;overflow:hidden;background:#eef2f7;position:relative"></div>
+   <div class="small mut" style="margin-top:6px">${d.punti.length} comuni con attività${d.non_localizzate?` · <b>${d.non_localizzate} senza comune riconosciuto</b>, quindi non sulla cartina${(d.esempi_non_localizzate||[]).length?": "+d.esempi_non_localizzate.map(esc).join("; ")+(d.non_localizzate>d.esempi_non_localizzate.length?"…":""):""}. Correggi la località nell'opportunità`:""}. Il numero nel cerchio è il totale delle opportunità del comune. Se la cartina non si vede, togli la spunta da «Cartina».</div>`;
+  const mc=$("#mapc",box),mz=$("#mz",box);
+  $("#mt",box).onchange=e=>{MAPPREF.cartina=e.target.checked;drawMap(box,d)};
+  const zonaOn=()=>mz.checked&&nz>0;
+  if(!d.punti.length&&!zonaOn()){mc.innerHTML='<div class="mut" style="padding:40px;text-align:center">Nessuna opportunità localizzata per i filtri scelti.'+(nz?' Spunta «Zone di lavoro» per vedere dove operano gli agenti.':'')+'</div>';
+    mz.onchange=()=>{MAPPREF.zone=mz.checked;drawMap(box,d)};return}
+  const ok=MAPPREF.cartina&&await loadLeaflet();
+  if(ok){
+    if(LMAP){try{LMAP.remove()}catch(e){}LMAP=null}
+    const map=LMAP=L.map(mc,{scrollWheelZoom:false}).setView([42.5,12.5],6);
+    const tl=L.tileLayer((S.meta&&S.meta.tile_url)||"https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:(S.meta&&S.meta.tile_attr)||"© OpenStreetMap",referrerPolicy:"strict-origin-when-cross-origin"}).addTo(map);
+    let tOk=0,tKo=0;const avv=()=>{if(tKo>=4&&!tOk&&!mc.querySelector(".tavv")){const w=document.createElement("div");w.className="tavv small";w.style.cssText="position:absolute;left:8px;bottom:26px;right:8px;z-index:900;background:#fff3cd;border-radius:8px;padding:6px 10px;color:#7a5200";w.textContent="Le immagini della cartina non si caricano: la rete o il firewall potrebbe bloccare tile.openstreetmap.org. Le zone e le opportunità restano visibili.";mc.appendChild(w)}};
+    tl.on("tileload",()=>{tOk++;const w=mc.querySelector(".tavv");if(w)w.remove()});tl.on("tileerror",()=>{tKo++;avv()});
+    const pts=[];
+    d.punti.forEach(p=>{const s=pieSize(p);
+      L.marker([p.lat,p.lon],{icon:L.divIcon({className:"",html:`<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">${pieInner(p,s)}</svg>`,iconSize:[s,s],iconAnchor:[s/2,s/2]})}).bindPopup(popTxt(p)).addTo(map);pts.push([p.lat,p.lon])});
+    const zl=L.layerGroup(d.zone.map(z=>L.circleMarker([z.lat,z.lon],{radius:5,color:"#0a84ff",weight:1,fillColor:"#0a84ff",fillOpacity:.35}).bindTooltip(esc(z.nome))));
+    const zpts=d.zone.map(z=>[z.lat,z.lon]);
+    const fit=()=>{const all=zonaOn()?pts.concat(zpts):pts;if(all.length)map.fitBounds(all,{padding:[40,40],maxZoom:10})};
+    mz.onchange=()=>{MAPPREF.zone=mz.checked;if(mz.checked){zl.addTo(map)}else map.removeLayer(zl);fit();
+      const lg=box.querySelector(".row.small");if(lg)drawMapLegendZone(lg,mz.checked)};
+    if(zonaOn())zl.addTo(map);
+    fit();
+    setTimeout(()=>map.invalidateSize(),200);
+  }else{mz.onchange=()=>{MAPPREF.zone=mz.checked};svgMap(mc,d,mz,MAPPREF.cartina)}
+}
+function drawMapLegendZone(lg,on){let z=lg.querySelector(".zleg");
+  if(on&&!z){z=document.createElement("span");z.className="zleg";z.innerHTML='<span style="color:#0a84ff">●</span> Zone di lavoro';lg.insertBefore(z,lg.querySelector("label"))}
+  if(!on&&z)z.remove()}
+function svgMap(mc,d,zchk,volevaCartina){
+  const W=900,H=430,P=40;
+  const draw=()=>{
+    const zon=zchk.checked&&d.zone.length>0;
+    const all=d.punti.concat(zon?d.zone:[]);
+    if(!all.length){mc.innerHTML='<div class="mut" style="padding:40px;text-align:center">Nessuna opportunità localizzata per i filtri scelti.</div>';return}
+    let a=Math.min(...all.map(p=>p.lat)),b=Math.max(...all.map(p=>p.lat)),c=Math.min(...all.map(p=>p.lon)),e=Math.max(...all.map(p=>p.lon));
+    if(b-a<.6){a-=.3;b+=.3}if(e-c<.6){c-=.3;e+=.3}
+    const k=Math.cos(((a+b)/2)*Math.PI/180),sx=(W-2*P)/((e-c)*k),sy=(H-2*P)/(b-a),sc=Math.min(sx,sy);
+    const ox=(W-(e-c)*k*sc)/2,oy=(H-(b-a)*sc)/2;
+    const X=lon=>ox+(lon-c)*k*sc,Y=lat=>H-oy-(lat-a)*sc;
+    let g="";
+    for(let la=Math.ceil(a);la<=b;la++)g+=`<line x1="0" x2="${W}" y1="${Y(la)}" y2="${Y(la)}" stroke="#dbe3ee"/><text x="4" y="${Y(la)-3}" font-size="10" fill="#94a3b8">${la}°N</text>`;
+    for(let lo=Math.ceil(c);lo<=e;lo++)g+=`<line y1="0" y2="${H}" x1="${X(lo)}" x2="${X(lo)}" stroke="#dbe3ee"/><text y="${H-4}" x="${X(lo)+3}" font-size="10" fill="#94a3b8">${lo}°E</text>`;
+    if(zon)d.zone.forEach(z=>g+=`<circle cx="${X(z.lon)}" cy="${Y(z.lat)}" r="4.5" fill="#0a84ff" fill-opacity=".35" stroke="#0a84ff"><title>${esc(z.nome)}</title></circle>`);
+    d.punti.forEach(p=>{const s=pieSize(p);g+=`<g transform="translate(${X(p.lon)-s/2},${Y(p.lat)-s/2})"><title>${esc(p.comune)} (${esc(p.sigla)}): contratti ${p.contratti}, KO ${p.ko}, in corso ${p.aperte}</title>${pieInner(p,s)}</g><text x="${X(p.lon)}" y="${Y(p.lat)+s/2+11}" font-size="10" text-anchor="middle" fill="#334155">${esc(p.comune)}</text>`});
+    mc.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">${g}</svg><div class="small mut" style="position:absolute;left:8px;top:6px">${volevaCartina?"Cartina non raggiungibile da questa rete: vista semplificata":"Vista semplificata (cartina disattivata)"}</div>`;
+  };
+  zchk.addEventListener("change",draw);draw();
+}
+async function loadMap(qs){
+  const box=$("#mapbox");if(!box)return;
+  try{const d=await api("/mappa?"+qs);await drawMap(box,d)}catch(e){box.innerHTML=`<div style="color:var(--ko)">${esc(e.message)}</div>`}
+}
+
+/* ------------------------------------------------ zone di lavoro (regione > province > comuni) */
+const GC={prov:{},com:{},reg:null};
+async function geoReg(){return GC.reg||(GC.reg=await api("/geo/regioni"))}
+async function geoProv(rid){return GC.prov[rid]||(GC.prov[rid]=await api("/geo/province?regioni="+rid))}
+async function geoCom(pid){return GC.com[pid]||(GC.com[pid]=await api("/geo/comuni?province="+pid))}
+function zonePicker(box,init){
+  const Z={regioni:new Set(init.regioni||[]),province:new Set(init.province||[]),comuni:new Set(init.comuni||[])};
+  const openP=new Set();let REG=[];const provIdx={};
+  box.innerHTML=`<details class="dd" id="zr"><summary></summary><div class="ddb" id="zrb"></div></details>
+   <details class="dd" id="zp"><summary></summary><div class="ddb" id="zpb"></div></details><div id="zc"></div>`;
+  const sum=()=>{$("#zr summary",box).innerHTML=`① Regioni di lavoro <span class="badge">${Z.regioni.size} selezionate</span>`;
+    $("#zp summary",box).innerHTML=`② Province di lavoro <span class="badge">${Z.province.size} selezionate</span>`;};
+  async function renderReg(){
+    REG=await geoReg();
+    $("#zrb",box).innerHTML=REG.map(r=>`<label class="chk"><input type="checkbox" data-r="${r.id}" ${Z.regioni.has(r.id)?"checked":""}> ${esc(r.nome)}</label>`).join("");
+    $("#zrb",box).querySelectorAll("[data-r]").forEach(i=>i.onchange=async()=>{const id=+i.dataset.r;
+      if(i.checked)Z.regioni.add(id);else{Z.regioni.delete(id);
+        for(const p of (GC.prov[id]||[])){Z.province.delete(p.id);(GC.com[p.id]||[]).forEach(c=>Z.comuni.delete(c.id))}}
+      await renderProv();await renderCom();sum()});
+  }
+  async function renderProv(){
+    const ids=[...Z.regioni];let h="";
+    if(!ids.length)h='<div class="mut small">Seleziona prima almeno una regione.</div>';
+    for(const rid of ids){const ps=await geoProv(rid);const rn=(REG.find(r=>r.id===rid)||{}).nome||"";
+      ps.forEach(p=>provIdx[p.id]=p);
+      h+=`<div class="loc">${esc(rn)} <a href="#" data-all="${rid}">tutte</a> · <a href="#" data-none="${rid}">nessuna</a></div>`+
+        ps.map(p=>`<label class="chk"><input type="checkbox" data-p="${p.id}" ${Z.province.has(p.id)?"checked":""}> ${esc(p.nome)} <span class="mut">(${esc(p.sigla)})</span></label>`).join("");}
+    const b=$("#zpb",box);b.innerHTML=h;
+    b.querySelectorAll("[data-p]").forEach(i=>i.onchange=async()=>{const id=+i.dataset.p;
+      if(i.checked)Z.province.add(id);else{Z.province.delete(id);(GC.com[id]||[]).forEach(c=>Z.comuni.delete(c.id))}
+      await renderCom();sum()});
+    b.querySelectorAll("[data-all],[data-none]").forEach(a=>a.onclick=async ev=>{ev.preventDefault();const all=a.dataset.all!=null,rid=+(a.dataset.all||a.dataset.none);
+      for(const p of await geoProv(rid)){if(all)Z.province.add(p.id);else{Z.province.delete(p.id);(GC.com[p.id]||[]).forEach(c=>Z.comuni.delete(c.id))}}
+      await renderProv();await renderCom();sum()});
+  }
+  async function renderCom(){
+    const z=$("#zc",box);const ids=[...Z.province];
+    if(!ids.length){z.innerHTML='<div class="mut small" style="margin-top:6px">③ Dopo aver scelto le province compaiono qui i comuni da selezionare.</div>';return}
+    z.innerHTML="";
+    for(const pid of ids){const p=provIdx[pid]||{nome:"Provincia",sigla:""};const cs=await geoCom(pid);
+      const d=document.createElement("details");d.className="dd";if(openP.has(pid))d.open=true;
+      const upd=()=>{const n=cs.filter(c=>Z.comuni.has(c.id)).length;
+        d.querySelector("summary").innerHTML=`③ Comuni di ${esc(p.nome)} (${esc(p.sigla)}) <span class="badge">${n?n+" di "+cs.length+" selezionati":"tutta la provincia ("+cs.length+")"}</span>`};
+      d.innerHTML=`<summary></summary><div class="ddb"><div class="row" style="margin-bottom:6px"><input class="grow" placeholder="Cerca comune…" data-q><button type="button" class="btn sec sm" data-a>Seleziona tutti</button><button type="button" class="btn sec sm" data-n>Nessuno</button></div>
+        <div class="small mut" style="margin-bottom:4px">Se non scegli nessun comune vale l'intera provincia.</div>
+        <div class="cols">${cs.map(c=>`<label class="chk" data-nm="${esc(c.nome.toLowerCase())}"><input type="checkbox" data-c="${c.id}" ${Z.comuni.has(c.id)?"checked":""}> ${esc(c.nome)}</label>`).join("")||'<span class="mut small">Nessun comune in archivio: carica l\'elenco da «Aree e geografia».</span>'}</div></div>`;
+      d.addEventListener("toggle",()=>{d.open?openP.add(pid):openP.delete(pid)});
+      d.querySelectorAll("[data-c]").forEach(i=>i.onchange=()=>{i.checked?Z.comuni.add(+i.dataset.c):Z.comuni.delete(+i.dataset.c);upd()});
+      d.querySelector("[data-a]").onclick=()=>{d.querySelectorAll("[data-c]").forEach(i=>{if(i.closest("label").style.display!=="none"){i.checked=true;Z.comuni.add(+i.dataset.c)}});upd()};
+      d.querySelector("[data-n]").onclick=()=>{d.querySelectorAll("[data-c]").forEach(i=>{i.checked=false;Z.comuni.delete(+i.dataset.c)});upd()};
+      d.querySelector("[data-q]").oninput=e=>{const q=e.target.value.trim().toLowerCase();d.querySelectorAll("[data-nm]").forEach(l=>l.style.display=!q||l.dataset.nm.includes(q)?"":"none")};
+      upd();z.appendChild(d);}
+  }
+  (async()=>{await renderReg();await renderProv();await renderCom();sum()})();
+  return {get:()=>({regioni:[...Z.regioni],province:[...Z.province],comuni:[...Z.comuni]})};
+}
+
+/* ------------------------------------------------ proposte (assistente + manuale + vaglio) */
+const PST={in_attesa:"In attesa del Direttore",approvata:"Approvata",rifiutata:"Rifiutata"};
+async function pgProposte(el){
+  const r=await api("/proposte");const L=r.proposte,vag=r.puo_vagliare;
+  const AI=await api("/ai/stato").catch(()=>({attivo:false}));
+  const attesa=L.filter(p=>p.stato==="in_attesa");
+  const agentiArea=(S.agenti||[]).filter(a=>a.ruolo==="agente"||a.ruolo==="recuperatore");
+  el.innerHTML=`<h2>Proposte di opportunità</h2>
+  ${vag?`<div class="card"><div class="row" style="justify-content:space-between"><h3>Da vagliare (${attesa.length})</h3>${attesa.length>1?'<button class="btn ok sm" id="apall">✔ Approva tutte (assegna ai proponenti)</button>':""}</div>${attesa.length?`<div class="tw"><table><tr><th>Cliente</th><th>Telefono</th><th>Località</th><th>Proposta da</th><th>Note</th><th>Assegna a</th><th></th></tr>
+   ${attesa.map(p=>`<tr><td><b>${esc(p.cliente)}</b>${dupBadge(p.dup_info,dupLiv(p.dup_info))}</td><td>${esc(p.telefono)}</td><td class="small">${esc(p.localita)}${p.provincia?" ("+esc(p.provincia)+")":""} ${esc(p.indirizzo)}</td><td class="small">${esc(p.proponente)}</td><td class="small" style="max-width:260px;white-space:pre-wrap">${esc((p.note||"").slice(0,300))}</td>
+   <td><select data-ag="${p.id}">${agentiArea.filter(a=>a.area_id===p.area_id).map(a=>`<option value="${a.id}" ${a.id===p.proponente_id?"selected":""}>${esc(a.nome)}</option>`).join("")}</select></td>
+   <td><button class="btn ok sm" data-ap="${p.id}">✔ Approva</button> <button class="btn ko sm" data-ri="${p.id}">✖ Rifiuta</button></td></tr>`).join("")}</table></div>`:'<div class="mut small">Nessuna proposta in attesa.</div>'}</div>`:""}
+  <div class="card"><h3>💬 Assistente: opportunità e liste di prospect</h3>
+   <p class="small mut" style="margin-top:0">Scrivi come lo diresti a un collega. Per una <b>lista di possibili clienti</b>: <i>«voglio tutti i ristoranti della provincia di Gorizia»</i>, poi puoi affinare: <i>«solo quelli con telefono»</i>. Per <b>un'opportunità</b>: <i>«ho incontrato il signor Mario Rossi a Verona, tel 333 1234567, vuole un preventivo antifurto»</i>. Le proposte vanno al Direttore di area, che le approva o le rifiuta.</p>
+   <p class="small" style="margin:0 0 8px;color:${AI.attivo?"var(--ok)":"var(--warn)"}">${AI.attivo?"✨ Assistente AI attivo. Il testo che scrivi qui viene inviato al servizio AI (Anthropic) per essere interpretato; le liste trovate non vengono inviate.":"Assistente AI non attivo: uso la ricerca semplice, che riconosce solo parole chiave e un comune alla volta."+(S.me.ruolo==="admin"?" Puoi attivarlo in Impostazioni → Assistente AI.":" L'amministratore può attivarlo in Impostazioni.")}</p>
+   <div id="chat" class="chatbox"></div>
+   <div class="row"><textarea id="ct" class="grow" rows="2" placeholder="Scrivi qui l'opportunità…"></textarea><button class="btn" id="cgo">Invia</button></div></div>
+  <div class="card"><h3>✍️ Inserimento manuale</h3><button class="btn sec" id="manual">+ Nuova opportunità</button></div>
+  <div class="card"><h3>${vag?"Storico proposte":"Le mie proposte"}</h3><div class="tw"><table><tr><th>Data</th><th>Cliente</th><th>Località</th><th>Da</th><th>Stato</th></tr>
+  ${L.map(p=>`<tr><td class="small">${fmtDT(p.creata)}</td><td><b>${esc(p.cliente)}</b>${p.stato==="in_attesa"?dupBadge(p.dup_info,dupLiv(p.dup_info)):""}</td><td class="small">${esc(p.localita)}</td><td class="small">${esc(p.proponente)}</td>
+   <td><span class="badge ${p.stato==="approvata"?"b-contratto":p.stato==="rifiutata"?"b-ko":"b-da_gestire"}">${PST[p.stato]}</span>${p.motivo?` <span class="small mut">${esc(p.motivo)}</span>`:""}</td></tr>`).join("")||'<tr><td colspan="5" class="mut">Nessuna proposta</td></tr>'}</table></div></div>`;
+  const chat=$("#chat",el);
+  const say=(who,html)=>{const d=document.createElement("div");d.className="bub "+who;d.innerHTML=html;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d};
+  say("bot",AI.attivo?"Ciao! Chiedimi una lista di possibili clienti (es. «voglio tutti i parrucchieri di Gorizia e Monfalcone, solo con telefono») oppure raccontami un'opportunità: cliente, telefono, località e cosa chiede.":"Ciao! Puoi (1) descrivermi un'opportunità: cliente, telefono, località e cosa chiede; oppure (2) chiedermi una lista di possibili prospect, ad esempio «cerca mobilifici a Treviso» o «elenco ristoranti a Verona entro 5 km».");
+  let PREV=null;
+  const form=(dati,origine,testo)=>{
+    const d=say("bot",`<div class="small"><b>Controlla e correggi i dati</b></div>
+     <div class="row" style="gap:8px;flex-wrap:wrap"><div class="grow"><label>Cliente</label><input data-k="cliente" style="width:100%" value="${esc(dati.cliente)}"></div><div><label>Telefono</label><input data-k="telefono" value="${esc(dati.telefono)}"></div></div>
+     <div class="row" style="gap:8px;flex-wrap:wrap"><div class="grow"><label>Località</label><input data-k="localita" style="width:100%" value="${esc(dati.localita)}"></div><div><label>Prov.</label><input data-k="provincia" maxlength="2" size="3" value="${esc(dati.provincia)}"></div><div class="grow"><label>Indirizzo</label><input data-k="indirizzo" style="width:100%" value="${esc(dati.indirizzo)}"></div></div>
+     <label>Note</label><textarea data-k="note" rows="3" style="width:100%">${esc(dati.note)}</textarea>
+     <p><button class="btn ok sm" data-send>Invia al Direttore di area</button></p>`);
+    d.querySelector("[data-send]").onclick=async()=>{
+      const b={origine,testo};d.querySelectorAll("[data-k]").forEach(i=>b[i.dataset.k]=i.value);
+      try{const y=await api("/proposte",{json:b});toast(y.dup_info?"Proposta inviata, ma attenzione: "+y.dup_info:"Proposta inviata al Direttore di area",!!y.dup_info);pgProposte(el)}catch(e){toast(e.message,1)}};
+  };
+  const lista=(x)=>{
+    const R=x.risultati,haKm=R.some(r=>r.km!=null);
+    const filtri=[x.solo_tel?"solo con telefono":"",x.solo_piva?"solo con P.IVA":""].filter(Boolean).join(", ");
+    if(!R.length){say("bot","Non ho trovato attività di questo tipo ("+esc(x.categoria)+") per "+esc(x.luoghi_desc||x.comune)+(filtri?" ("+filtri+")":"")+(x.raggio_km&&!/provincia/.test(x.luoghi_desc||"")?", raggio "+x.raggio_km+" km":"")+". Prova ad allargare la zona o togliere i filtri.");return}
+    const d=say("bot",`${x.risposta?`<div>${esc(x.risposta)}</div>`:""}<div><b>${R.length} possibili prospect — ${esc(x.categoria)} · ${esc(x.luoghi_desc||x.comune)}${filtri?" · "+filtri:""}</b>${x.ai?' <span class="badge">✨ AI</span>':""}</div>
+     <div class="small mut">Fonte: ${esc(x.fonte)}. Verifica sempre i dati prima di contattare.${x.nota?` <b style="color:var(--warn)">${esc(x.nota)}</b>`:""}${x.troncato?' <b style="color:var(--warn)">La zona è molto grande: vedi solo una parte dei risultati. Restringi per comune o per tipo di attività.</b>':""}</div>
+     <div class="row small" style="margin:6px 0"><a href="#" data-all>Seleziona tutti</a><a href="#" data-none>Nessuno</a><span class="mut" data-cnt></span></div>
+     <div class="tw" style="max-height:340px;overflow:auto"><table class="small"><tr><th></th><th>Nome</th><th>Indirizzo</th><th>Telefono</th><th>P.IVA</th>${haKm?"<th>Km</th>":""}</tr>
+     ${R.map((r,i)=>`<tr><td><input type="checkbox" data-i="${i}" ${r.presente?"":"checked"}></td><td><b>${esc(r.nome)}</b>${dupBadge(r.controllo,r.livello)}${r.sito?`<div><a href="${esc(r.sito)}" target="_blank" rel="noopener">sito</a></div>`:""}</td><td>${esc(r.indirizzo)}</td><td>${esc(r.telefono)}</td><td>${esc(r.piva||"—")}</td>${haKm?`<td>${r.km==null?"":r.km}</td>`:""}</tr>`).join("")}</table></div>
+     <p class="row"><button class="btn ok sm" data-snd>Invia i selezionati al Direttore</button><button class="btn sec sm" data-csv>Scarica Excel (CSV)</button></p>
+     ${x.ai?'<div class="small mut">Puoi affinare la ricerca scrivendo, ad esempio, «solo con telefono», «anche Monfalcone» o «solo i comuni».</div>':""}`);
+    chat.scrollTop=Math.max(0,d.offsetTop-chat.offsetTop-8);
+    const cnt=()=>d.querySelector("[data-cnt]").textContent=d.querySelectorAll("[data-i]:checked").length+" selezionati su "+R.length;
+    d.querySelectorAll("[data-i]").forEach(i=>i.onchange=cnt);cnt();
+    d.querySelector("[data-all]").onclick=e=>{e.preventDefault();d.querySelectorAll("[data-i]").forEach(i=>i.checked=true);cnt()};
+    d.querySelector("[data-none]").onclick=e=>{e.preventDefault();d.querySelectorAll("[data-i]").forEach(i=>i.checked=false);cnt()};
+    d.querySelector("[data-snd]").onclick=async()=>{const items=[...d.querySelectorAll("[data-i]:checked")].map(i=>R[+i.dataset.i]);
+      if(!items.length){toast("Seleziona almeno un prospect",1);return}
+      try{const y=await api("/proposte/lista",{json:{items,comune:x.luoghi_desc||x.comune,provincia:x.provincia}});toast(y.inviati+" proposte inviate al Direttore di area"+(y.con_avvisi?" ("+y.con_avvisi+" segnalate come già presenti)":""),!!y.con_avvisi);pgProposte(el)}catch(e){toast(e.message,1)}};
+    d.querySelector("[data-csv]").onclick=()=>{const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+      const csv="\ufeff"+["Nome;Indirizzo;Telefono;Sito;Email;P.IVA"].concat(R.map(r=>[r.nome,r.indirizzo,r.telefono,r.sito,r.email,r.piva].map(q).join(";"))).join("\r\n");
+      const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="prospect-"+(x.luoghi_desc||x.comune).toLowerCase().replace(/\W+/g,"-")+".csv";a.click()};
+  };
+  const go1=async()=>{const t=$("#ct",el).value.trim();if(!t)return;say("me",esc(t));$("#ct",el).value="";
+    const w=say("bot",AI.attivo?"Ci penso un attimo… le ricerche su zone grandi possono richiedere fino a un minuto.":"Cerco… può richiedere qualche secondo.");
+    try{const x=await api("/assistente",{json:{testo:t,prev:PREV}});w.remove();
+      if(x.avviso)say("bot",`<span class="small" style="color:var(--warn)">${esc(x.avviso)}</span>`);
+      if(x.tipo==="lista"){PREV=x.interpretazione||null;lista(x)}
+      else if(x.tipo==="opportunita"){PREV=null;say("bot",esc(x.messaggio));form(x.dati,"assistente",t)}
+      else say("bot",esc(x.messaggio))}
+    catch(e){w.innerHTML='<span style="color:var(--ko)">'+esc(e.message)+"</span>"}};
+  $("#cgo",el).onclick=go1;
+  $("#ct",el).onkeydown=e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();go1()}};
+  $("#manual",el).onclick=()=>{const m=modal(`<h2>Nuova opportunità${closeBtn}</h2><p class="small mut" style="margin-top:0">Verrà inviata al Direttore di area per il vaglio.</p><div id="mf"></div>`);
+    const d=document.createElement("div");$("#mf",m).appendChild(d);
+    d.innerHTML=`<div class="row" style="gap:8px;flex-wrap:wrap"><div class="grow"><label>Cliente</label><input data-k="cliente" style="width:100%"></div><div><label>Telefono</label><input data-k="telefono"></div></div>
+     <div class="row" style="gap:8px;flex-wrap:wrap"><div class="grow"><label>Località</label><input data-k="localita" style="width:100%"></div><div><label>Prov.</label><input data-k="provincia" maxlength="2" size="3"></div><div class="grow"><label>Indirizzo</label><input data-k="indirizzo" style="width:100%"></div></div>
+     <label>Note</label><textarea data-k="note" rows="4" style="width:100%"></textarea><p><button class="btn ok" data-send>Invia al Direttore di area</button></p>`;
+    d.querySelector("[data-send]").onclick=async()=>{const b={origine:"manuale"};d.querySelectorAll("[data-k]").forEach(i=>b[i.dataset.k]=i.value);
+      try{const y=await api("/proposte",{json:b});m.close();toast(y.dup_info?"Proposta inviata, ma attenzione: "+y.dup_info:"Proposta inviata al Direttore di area",!!y.dup_info);pgProposte(el)}catch(e){toast(e.message,1)}}};
+  el.querySelectorAll("[data-ap]").forEach(b=>b.onclick=async()=>{try{await api(`/proposte/${b.dataset.ap}/decisione`,{json:{azione:"approva",agent_id:+el.querySelector(`[data-ag="${b.dataset.ap}"]`).value}});toast("Approvata e assegnata");pgProposte(el)}catch(e){toast(e.message,1)}});
+  if($("#apall",el))$("#apall",el).onclick=async()=>{if(!confirm("Approvare tutte le "+attesa.length+" proposte, assegnandole a chi le ha proposte?"))return;
+    let ok=0;for(const p of attesa){try{await api(`/proposte/${p.id}/decisione`,{json:{azione:"approva",agent_id:p.proponente_id}});ok++}catch(e){}}toast(ok+" proposte approvate");pgProposte(el)};
+  el.querySelectorAll("[data-ri]").forEach(b=>b.onclick=async()=>{const mo=prompt("Motivo del rifiuto (facoltativo):");if(mo===null)return;
+    try{await api(`/proposte/${b.dataset.ri}/decisione`,{json:{azione:"rifiuta",motivo:mo}});toast("Proposta rifiutata");pgProposte(el)}catch(e){toast(e.message,1)}});
+}
+
+/* ------------------------------------------------ utenti */
+const RUOLI_FORM=["area_manager","district","team_leader","agente","recuperatore","ufficio_disdette"];
+const RL=id=>(S.meta.ruoli.find(r=>r.id===id)||{}).label||id;
+async function pgUtenti(el){
+  const us=await api("/users");
+  const staff=us.filter(u=>u.ruolo!=="admin"&&u.ruolo!=="direttore");
+  const btn=(r,t)=>`<button class="btn sec sm" data-new="${r}">+ ${t}</button>`;
+  el.innerHTML=`<div class="top"><h2>Utenti e permessi</h2><div class="row">
+    ${S.me.ruolo==="admin"?btn("direttore","Direttore di area"):""}${btn("area_manager","Area manager")}${btn("district","District")}${btn("team_leader","Team Leader")}${btn("agente","Venditore")}${btn("recuperatore","Recuperatore disdette")}${btn("ufficio_disdette","Ufficio Disdette")}</div></div>
+  ${staff.length===0?`<div class="card" style="border-color:#93b4ee;background:#f3f7ff"><h3>Come costruire la rete</h3><ol class="small" style="margin:0;padding-left:18px">
+    <li>Crea i <b>District</b> (rispondono al Direttore di area).</li><li>Crea i <b>Team Leader</b> e indica il District che li coordina.</li>
+    <li>Crea i <b>Venditori</b>: indica se hanno un Team Leader e/o un District di riferimento e scegli le loro <b>zone di lavoro</b> (regione → province → comuni).</li>
+    <li>Guarda il risultato in <b>Organigramma</b>.</li></ol></div>`:""}
+  <div class="card"><div class="tw"><table><tr><th>Nome</th><th>Utente</th><th>Ruolo</th><th>Area</th><th>Risponde a</th><th>Zone</th><th></th></tr>
+  ${us.map(u=>`<tr class="${u.attivo?"":"mut"}"><td><b>${esc(u.nome)}</b>${u.attivo?"":' <span class="badge">disattivo</span>'}</td><td>${esc(u.username)}</td><td>${esc(u.ruolo_label)}</td><td class="small">${esc(u.area||"")}</td><td class="small">${esc(u.riferimento||"")}</td>
+   <td class="small">${(u.zone.province||[]).map(s=>`<span class="badge">${esc(s)}</span>`).join(" ")}${u.zone.comuni?` <span class="mut">${u.zone.comuni} comuni</span>`:""}</td>
+   <td><button class="btn sec sm" data-e="${u.id}">Modifica</button></td></tr>`).join("")}</table></div></div>`;
+  el.querySelectorAll("[data-new]").forEach(b=>b.onclick=()=>userForm(null,us,()=>pgUtenti(el),{ruolo:b.dataset.new}));
+  el.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>userForm(us.find(u=>u.id==b.dataset.e),us,()=>pgUtenti(el)));
+}
+async function userForm(u,us,done,preset){
+  preset=preset||{};const isNew=!u;
+  const base=u||{ruolo:preset.ruolo||"agente",area_id:preset.area_id||S.me.area_id,override:{},attivo:true,nome:"",territori:""};
+  let areaId=base.area_id||(S.me.ruolo==="admin"?(S.meta.aree[0]||{}).id:S.me.area_id);
+  const byId=id=>us.find(x=>x.id===id);
+  const H={district:preset.district||null,tl:preset.tl||null};
+  if(preset.tl){const t=byId(preset.tl);if(t)H.district=t.parent_id}
+  if(u&&u.parent_id){const p=byId(u.parent_id);if(p){if(p.ruolo==="team_leader"){H.tl=p.id;H.district=p.parent_id}else if(p.ruolo==="district")H.district=p.id}}
+  const ruoliOk=S.me.ruolo==="admin"?["direttore",...RUOLI_FORM]:RUOLI_FORM;
+  let zp=null,zoneInit={regioni:[],province:[],comuni:[]};
+  if(u&&(u.ruolo==="agente"||u.ruolo==="recuperatore"||u.ruolo==="area_manager")){try{zoneInit=await api(`/users/${u.id}/geo`)}catch(e){}}
+  const m=modal(`<h2>${isNew?"Nuovo profilo":"Modifica "+esc(u.nome)}${closeBtn}</h2>
+  <div class="row"><div class="grow"><label>Nome e cognome</label><input id="un" style="width:100%" value="${esc(base.nome||"")}"></div>
+   ${isNew?`<div><label>Utente (login)</label><input id="uu" autocapitalize="none" autocomplete="off"></div><div><label>Password iniziale (min. 8)</label><input id="up" type="text" autocomplete="off"></div>`:""}</div>
+  <div class="row"><div><label>Ruolo</label><select id="ur">${ruoliOk.map(r=>`<option value="${r}" ${base.ruolo===r?"selected":""}>${RL(r)}</option>`).join("")}</select></div>
+   ${S.me.ruolo==="admin"?`<div><label>Area</label><select id="ua">${S.meta.aree.map(a=>`<option value="${a.id}" ${areaId===a.id?"selected":""}>${esc(a.nome)}</option>`).join("")}</select></div>`:`<div><label>Area</label><div style="padding:8px 0">${esc(S.me.area||"")}</div></div>`}</div>
+  <div class="card" style="background:#f8fafc;margin-top:12px"><h3>Posizione nella rete</h3><div id="hier" class="row"></div></div>
+  <div id="zonebox" class="card hide" style="background:#f8fafc"><h3>Zone di lavoro</h3><p class="small mut" style="margin-top:0">Scegli le regioni, poi le province e infine i comuni in cui lavora. Il sistema assegna le opportunità in base a queste zone.</p><div id="zpick"></div></div>
+  ${isNew?"":`<label class="chk"><input type="checkbox" id="uat" ${u.attivo?"checked":""}> Utente attivo</label>`}
+  <h3 style="margin-top:14px">Accesso per funzione</h3><p class="small mut" style="margin-top:0">«Default» segue il ruolo; puoi concedere o togliere singole funzioni.</p><div class="perm" id="pm"></div>
+  <p class="row" style="margin-top:14px"><button class="btn" id="sv">Salva</button>${isNew?"":'<button class="btn sec" id="rp">Reimposta password</button>'}</p>`,true);
+  const areaUsers=()=>us.filter(x=>x.area_id===areaId&&x.attivo&&(!u||x.id!==u.id));
+  const opt=(arr,sel,none)=>(none?`<option value="">${none}</option>`:"")+arr.map(x=>`<option value="${x.id}" ${sel===x.id?"selected":""}>${esc(x.nome)}</option>`).join("");
+  function hier(){
+    const r=$("#ur",m).value,A=areaUsers(),dirs=A.filter(x=>x.ruolo==="direttore"),dists=A.filter(x=>x.ruolo==="district"),tls=A.filter(x=>x.ruolo==="team_leader");
+    const h=$("#hier",m);
+    if(r==="direttore"){h.innerHTML='<div class="small mut">Il Direttore di area è al vertice dell\'area.</div>';return}
+    if(r==="district"||r==="recuperatore"||r==="ufficio_disdette"||r==="area_manager"){
+      h.innerHTML=`<div class="grow"><label>${r==="district"?"Risponde a (Direttore di area o Area manager)":"Risponde a (Direttore di area)"}</label><select id="hd" style="width:100%">${opt(r==="district"?dirs.concat(A.filter(x=>x.ruolo==="area_manager")):dirs,H.dir)}</select>${dirs.length?"":'<div class="small" style="color:var(--ko)">Nessun Direttore in quest\'area: crealo prima.</div>'}</div>`;return}
+    if(r==="team_leader"){
+      h.innerHTML=`<div class="grow"><label>District che coordina questo Team Leader</label><select id="hd" style="width:100%">${opt(dists,H.district,"— Nessuno: risponde direttamente al Direttore —")}</select></div>`;
+      $("#hd",m).onchange=e=>{H.district=+e.target.value||null};return}
+    const tlList=H.district?tls.filter(t=>t.parent_id===H.district):tls;
+    h.innerHTML=`<div class="grow"><label>District di riferimento</label><select id="hdi" style="width:100%">${opt(dists,H.district,"— Nessun District —")}</select></div>
+     <div class="grow"><label>Team Leader che lo segue</label><select id="htl" style="width:100%">${tlList.map(t=>`<option value="${t.id}" ${H.tl===t.id?"selected":""}>${esc(t.nome)}${H.district?"":" ("+esc((byId(t.parent_id)||{nome:"senza district"}).nome)+")"}</option>`).join("").replace(/^/,`<option value="">${H.district?"— Nessun Team Leader: risponde direttamente al District —":"— Nessun Team Leader —"}</option>`)}</select></div>`;
+    $("#hdi",m).onchange=e=>{H.district=+e.target.value||null;if(H.tl){const t=byId(H.tl);if(!t||t.parent_id!==H.district)H.tl=null}hier()};
+    $("#htl",m).onchange=e=>{H.tl=+e.target.value||null;if(H.tl){const t=byId(H.tl);H.district=t?t.parent_id:H.district}hier()};
+  }
+  const parentId=()=>{const r=$("#ur",m).value,A=areaUsers(),dir=(A.find(x=>x.ruolo==="direttore")||{}).id||null;
+    if(r==="direttore")return null;
+    if(r==="district"||r==="recuperatore"||r==="ufficio_disdette"||r==="area_manager")return +($("#hd",m)||{}).value||dir;
+    if(r==="team_leader")return H.district||dir;
+    return H.tl||H.district||dir};
+  const zoneUI=()=>{const r=$("#ur",m).value,show=r==="agente"||r==="recuperatore"||r==="area_manager";$("#zonebox",m).classList.toggle("hide",!show);
+    if(show&&!zp)zp=zonePicker($("#zpick",m),zoneInit)};
+  const permUI=()=>{const rr=$("#ur",m).value,def=new Set(S.meta.default_ruolo[rr]);
+    $("#pm",m).innerHTML=S.meta.funzioni.map(f=>{const ov=base.override[f.id];const val=ov==null?"":(ov?"1":"0");
+      return `<div>${esc(f.label)}</div><select data-f="${f.id}" ${rr==="admin"?"disabled":""}><option value="">Default (${def.has(f.id)?"sì":"no"})</option><option value="1" ${val==="1"?"selected":""}>Consenti</option><option value="0" ${val==="0"?"selected":""}>Nega</option></select>`}).join("")};
+  $("#ur",m).onchange=()=>{hier();zoneUI();permUI()};
+  if($("#ua",m))$("#ua",m).onchange=e=>{areaId=+e.target.value;H.district=null;H.tl=null;hier()};
+  hier();zoneUI();permUI();
+  $("#sv",m).onclick=async()=>{
+    const permessi={};m.querySelectorAll("[data-f]").forEach(s=>permessi[s.dataset.f]=s.value===""?null:s.value==="1");
+    const ruolo=$("#ur",m).value;
+    const body={nome:$("#un",m).value,ruolo,parent_id:parentId(),permessi};
+    if(S.me.ruolo==="admin")body.area_id=areaId;
+    try{let id=u&&u.id;
+      if(isNew){body.username=$("#uu",m).value;body.password=$("#up",m).value;id=(await api("/users",{json:body})).id;
+        if(Object.values(permessi).some(v=>v!==null))await api("/users/"+id,{method:"PUT",json:{permessi}})}
+      else{body.attivo=$("#uat",m).checked;await api("/users/"+id,{method:"PUT",json:body})}
+      if(zp&&(ruolo==="agente"||ruolo==="recuperatore"||ruolo==="area_manager"))await api(`/users/${id}/geo`,{method:"PUT",json:zp.get()});
+      m.close();toast("Salvato");try{S.agenti=await api("/agenti")}catch(e){}done()}catch(e){toast(e.message,1)}};
+  if($("#rp",m))$("#rp",m).onclick=()=>{const pw=prompt("Nuova password temporanea (min. 8 caratteri). L'utente dovrà cambiarla al primo accesso.");if(pw)api(`/users/${u.id}/password`,{json:{password:pw}}).then(()=>toast("Password reimpostata")).catch(e=>toast(e.message,1))};
+}
+
+/* ------------------------------------------------ organigramma */
+async function pgOrg(el){
+  const L=await api("/organigramma");
+  const ids=new Set(L.map(x=>x.id)),kids={};
+  L.forEach(x=>{const p=ids.has(x.parent_id)?x.parent_id:0;(kids[p]=kids[p]||[]).push(x)});
+  const ord={direttore:0,ufficio_disdette:0.5,area_manager:0.6,district:1,team_leader:2,agente:3,recuperatore:4};
+  Object.values(kids).forEach(a=>a.sort((a,b)=>(ord[a.ruolo]-ord[b.ruolo])||a.nome.localeCompare(b.nome)));
+  const byId=Object.fromEntries(L.map(x=>[x.id,x]));
+  const nTL=L.filter(x=>x.ruolo==="team_leader").length,nD=L.filter(x=>x.ruolo==="district").length,nA=L.filter(x=>x.ruolo==="agente").length;
+  const senzaTL=L.filter(x=>x.ruolo==="agente"&&!(byId[x.parent_id]&&byId[x.parent_id].ruolo==="team_leader"));
+  const tlSenzaD=L.filter(x=>x.ruolo==="team_leader"&&!(byId[x.parent_id]&&byId[x.parent_id].ruolo==="district"));
+  const canEdit=can("utenti");
+  const node=n=>{
+    const ch=kids[n.id]||[];
+    const add=n.ruolo==="direttore"?[["area_manager","Area manager"],["district","District"],["team_leader","Team Leader"],["agente","Venditore"],["recuperatore","Recuperatore"],["ufficio_disdette","Ufficio Disdette"]]:n.ruolo==="area_manager"?[["district","District"],["team_leader","Team Leader"],["agente","Venditore"]]:n.ruolo==="district"?[["team_leader","Team Leader"],["agente","Venditore"]]:n.ruolo==="team_leader"?[["agente","Venditore"]]:[];
+    return `<div class="orgn r-${n.ruolo}"><div class="orgc"><div class="orgt"><b>${esc(n.nome)}</b> <span class="badge">${esc(n.ruolo_label)}</span>${n.attivo?"":' <span class="badge">disattivo</span>'}
+      ${n.zone.province.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}${n.zone.comuni?`<span class="small mut"> ${n.zone.comuni} comuni</span>`:""}</div>
+      <div class="small mut">${["agente","recuperatore"].includes(n.ruolo)?`In corso <b>${n.aperte}</b> · <span style="color:var(--ok)">Contratti <b>${n.contratti}</b></span> · <span style="color:var(--ko)">KO <b>${n.ko}</b></span>`:`${ch.length} ${ch.length===1?"collaboratore diretto":"collaboratori diretti"}`}</div>
+      ${canEdit?`<div class="row" style="margin-top:4px"><button class="btn sec sm" data-e="${n.id}">Modifica</button>${add.map(([r,t])=>`<button class="btn sec sm" data-add="${r}" data-par="${n.id}">+ ${t}</button>`).join("")}</div>`:""}</div>
+      ${ch.length?`<div class="orgch">${ch.map(node).join("")}</div>`:""}</div>`;
+  };
+  const roots=kids[0]||[];
+  const byArea={};roots.forEach(r=>(byArea[r.area||"—"]=byArea[r.area||"—"]||[]).push(r));
+  const tb=canEdit?`<div class="card" style="padding:10px 14px"><div class="row" style="gap:8px;flex-wrap:wrap"><b style="margin-right:4px">Aggiungi alla rete:</b>${S.me.ruolo==="admin"?'<button class="btn sm" data-top="direttore">+ Direttore di area</button>':""}<button class="btn sm" data-top="area_manager">+ Area manager</button><button class="btn sm" data-top="district">+ District</button><button class="btn sm" data-top="team_leader">+ Team Leader</button><button class="btn sm" data-top="agente">+ Agente / Venditore</button><button class="btn sm" data-top="recuperatore">+ Recuperatore disdette</button></div></div>`:"";
+  el.innerHTML=`<h2>Organigramma della rete</h2>${tb}
+  <div class="kpis"><div class="kpi"><b>${nD}</b><span>District</span></div><div class="kpi"><b>${nTL}</b><span>Team Leader</span></div><div class="kpi"><b>${nA}</b><span>Venditori</span></div></div>
+  ${senzaTL.length||tlSenzaD.length?`<div class="card small" style="border-color:#f5c26b;background:#fffaf0">${tlSenzaD.length?`<div>⚠ Team Leader senza District: ${tlSenzaD.map(x=>esc(x.nome)).join(", ")}</div>`:""}${senzaTL.length?`<div>ℹ Venditori che rispondono direttamente a District/Direttore (senza Team Leader): ${senzaTL.map(x=>esc(x.nome)).join(", ")}</div>`:""}</div>`:""}
+  ${Object.entries(byArea).map(([a,rs])=>`<div class="card">${Object.keys(byArea).length>1||S.me.ruolo==="admin"?`<h3>${esc(a)}</h3>`:""}${rs.map(node).join("")}</div>`).join("")||'<div class="card mut">Nessun profilo ancora: creali da «Utenti».</div>'}`;
+  if(canEdit){
+    const withUsers=async fn=>{try{fn(await api("/users"))}catch(e){toast(e.message,1)}};
+    el.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>withUsers(us=>userForm(us.find(u=>u.id==b.dataset.e),us,()=>pgOrg(el))));
+    el.querySelectorAll("[data-top]").forEach(b=>b.onclick=()=>withUsers(us=>userForm(null,us,()=>pgOrg(el),{ruolo:b.dataset.top})));
+    el.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>withUsers(us=>{const p=byId(+b.dataset.par),r=b.dataset.add;
+      const pre={ruolo:r,area_id:p.area_id};
+      if(r==="team_leader"&&p.ruolo==="district")pre.district=p.id;
+      if(r==="agente"){if(p.ruolo==="team_leader")pre.tl=p.id;else if(p.ruolo==="district")pre.district=p.id}
+      userForm(null,us,()=>pgOrg(el),pre)}));
+  }
+}
+
+/* ------------------------------------------------ aree e archivio geografico */
+async function pgAree(el){
+  const [ar,gs]=await Promise.all([api("/areas"),api("/geo/stato")]);
+  const adm=S.me.ruolo==="admin";
+  el.innerHTML=`<h2>Aree e archivio geografico</h2>
+  <div class="card"><h3>Aree</h3>${adm?`<form id="na" class="row" style="margin-bottom:10px"><div class="grow"><input id="nan" style="width:100%" placeholder="Nome della nuova area (es. Nord Ovest)"></div><button class="btn">+ Crea area</button></form>`:'<p class="small mut">Solo l\'amministratore crea e rinomina le aree.</p>'}
+  <div class="tw"><table><tr><th>Area</th><th>Profili</th><th>Campagne</th><th>Opportunità</th>${adm?"<th></th>":""}</tr>
+  ${ar.map(a=>`<tr><td><b>${esc(a.nome)}</b></td><td>${a.utenti}</td><td>${a.campagne}</td><td>${a.opportunita}</td>${adm?`<td class="row"><button class="btn sec sm" data-dir="${a.id}">+ Direttore</button><button class="btn sec sm" data-ren="${a.id}">Rinomina</button><button class="btn sec sm" data-del="${a.id}">Elimina</button></td>`:""}</tr>`).join("")}</table></div></div>
+  <div class="card"><h3>Archivio geografico (regioni, province, comuni)</h3>
+   <p class="small">Archivio attuale: <b>${gs.regioni}</b> regioni · <b>${gs.province}</b> province · <b>${gs.comuni}</b> comuni.
+   ${gs.completo?'<span class="badge b-contratto">Elenco completo</span>':'<span class="badge b-da_gestire">Elenco parziale</span>'}</p>
+   ${gs.completo?"":'<p class="small">Per scegliere tutti i comuni d\'Italia serve caricare l\'elenco completo. Si può scaricare in automatico (serve internet) oppure caricare un file.</p>'}
+   ${gs.messaggio?`<p class="small mut">Ultimo esito (${esc(gs.quando)}): ${esc(gs.messaggio)}</p>`:""}
+   <div class="row"><button class="btn" id="gdl">⬇ Scarica l'elenco completo dei comuni</button></div>
+   <form id="gup" style="margin-top:10px"><label>Oppure carica un file (GeoNames «IT.zip», oppure CSV con colonne Regione; Provincia; Sigla; Comune; Lat; Lon)</label>
+   <div class="row"><input type="file" name="file" accept=".zip,.txt,.csv" required><button class="btn sec">Carica file</button></div></form>
+   <div id="gmsg" class="small" style="margin-top:8px"></div>
+   <p class="small mut" style="margin-top:10px">Dati geografici: © <a href="https://www.geonames.org" target="_blank" rel="noopener">GeoNames</a> (licenza CC-BY 3.0). Le coordinate servono a posizionare i comuni sulla mappa.</p></div>`;
+  const reload=async()=>{S.meta=await api("/meta");pgAree(el)};
+  if(adm){
+    $("#na").onsubmit=async e=>{e.preventDefault();try{await api("/areas",{json:{nome:$("#nan").value}});toast("Area creata");reload()}catch(x){toast(x.message,1)}};
+    el.querySelectorAll("[data-ren]").forEach(b=>b.onclick=async()=>{const cur=ar.find(a=>a.id==b.dataset.ren);const n=prompt("Nuovo nome dell'area",cur.nome);if(n)try{await api("/areas/"+cur.id,{method:"PUT",json:{nome:n}});reload()}catch(x){toast(x.message,1)}});
+    el.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{const cur=ar.find(a=>a.id==b.dataset.del);if(confirm(`Eliminare l'area «${cur.nome}»? Si può solo se è vuota.`))try{await api("/areas/"+cur.id,{method:"DELETE",json:undefined});reload()}catch(x){toast(x.message,1)}});
+    el.querySelectorAll("[data-dir]").forEach(b=>b.onclick=async()=>{try{const us=await api("/users");userForm(null,us,()=>pgAree(el),{ruolo:"direttore",area_id:+b.dataset.dir})}catch(x){toast(x.message,1)}});
+  }
+  $("#gdl").onclick=async e=>{const b=e.target;b.disabled=true;b.textContent="Download in corso…";$("#gmsg").textContent="";
+    try{const r=await api("/geo/aggiorna",{json:{}});toast(`Caricati: ${r.nuovi} nuovi comuni`);pgAree(el)}catch(x){b.disabled=false;b.textContent="⬇ Scarica l'elenco completo dei comuni";$("#gmsg").innerHTML=`<span style="color:var(--ko)">${esc(x.message)}</span>`}};
+  $("#gup").onsubmit=async e=>{e.preventDefault();try{const r=await api("/geo/carica",{form:new FormData(e.target)});toast(`Caricati: ${r.nuovi} nuovi comuni`);pgAree(el)}catch(x){$("#gmsg").innerHTML=`<span style="color:var(--ko)">${esc(x.message)}</span>`}};
+}
+
+/* ------------------------------------------------ impostazioni */
+async function calendarioModal(){
+  let c;try{c=await api("/calendario/link")}catch(e){return toast(e.message,1)}
+  const m=modal(`<h2>Collega il calendario${closeBtn}</h2>
+   <p class="small mut" style="margin-top:0">Questo è il tuo indirizzo personale. Chi lo possiede vede i tuoi appuntamenti (nomi e indirizzi dei clienti): <b>non condividerlo</b>.</p>
+   <input id="cu" readonly style="width:100%" value="${esc(c.url)}" onfocus="this.select()"><p><button class="btn" id="cc">Copia indirizzo</button> <button class="btn sec" id="cr">Genera un nuovo indirizzo</button></p>
+   ${c.locale?`<p class="small" style="color:var(--warn)">Stai usando il programma sul tuo PC: questo indirizzo funziona solo da qui. Per Outlook serve la versione online del programma.</p>`:""}
+   <h3>In Outlook sul web (outlook.office.com)</h3><ol class="small"><li>Apri <b>Calendario</b> → <b>Aggiungi calendario</b> → <b>Iscriviti dal Web</b>.</li><li>Incolla l'indirizzo, dai un nome (es. «Sicuritalia») e premi <b>Importa</b>.</li></ol>
+   <h3>In Outlook per Windows</h3><ol class="small"><li>Nel <b>Calendario</b>: <b>Aggiungi calendario</b> → <b>Da Internet</b>.</li><li>Incolla l'indirizzo e conferma.</li></ol>
+   <p class="small mut">Il calendario di Outlook si aggiorna da solo, ma può metterci da pochi minuti ad alcune ore. Il calendario è in sola lettura: per modificare un appuntamento usa il programma. Funziona allo stesso modo con Google Calendar e il calendario dell'iPhone.</p>`);
+  $("#cc",m).onclick=async()=>{try{await navigator.clipboard.writeText(c.url);toast("Indirizzo copiato")}catch(e){$("#cu",m).select();toast("Selezionato: premi Copia")}};
+  $("#cr",m).onclick=async()=>{if(!confirm("Il vecchio indirizzo smetterà di funzionare e dovrai ricollegare il calendario. Continuare?"))return;
+    try{const n=await api("/calendario/rigenera",{json:{}});c.url=n.url;$("#cu",m).value=n.url;toast("Nuovo indirizzo creato")}catch(e){toast(e.message,1)}};
+}
+async function pgImpost(el){
+  const s=await api("/settings"),adm=S.me.ruolo==="admin";
+  el.innerHTML=`<h2>Impostazioni</h2>
+  <div class="card" style="max-width:620px"><h3>Tempi SLA per tipo di opportunità</h3>
+   <p class="small mut" style="margin-top:0">Tempo massimo (in ore) per lavorare un'opportunità assegnata; oltre questo tempo partono le notifiche a tutta la catena. ${adm?"Lascia vuoto per usare il tempo generale.":"Solo l'amministratore può modificarli."}</p>
+   <label>Tempo generale (se per un tipo non è indicato un valore)</label><input id="sg" type="number" min="1" max="720" value="${esc(s.sla_ore)}" ${adm?"":"disabled"}>
+   <div class="tw"><table><tr><th>Tipo di opportunità</th><th>SLA (ore)</th></tr>
+   ${S.meta.sla_tipi.map(t=>`<tr><td>${esc(t.label)}</td><td><input type="number" min="1" max="720" data-sla="${t.id}" value="${esc(s["sla_"+t.id])}" placeholder="${esc(s.sla_ore)} (generale)" style="width:140px" ${adm?"":"disabled"}></td></tr>`).join("")}</table></div>
+   <p class="small mut">La modifica vale per le opportunità assegnate da ora in poi.</p>${adm?'<p><button class="btn" id="sl">Salva SLA</button></p>':""}</div>
+  <div class="card" style="max-width:620px"><label>Appuntamenti al giorno per agente (limite consigliato: oltre questo numero l'agente riceve un avviso e può inserire comunque)</label><input id="s2" type="number" min="1" max="10" value="${esc(s.max_appuntamenti_giorno)}">
+  <label>Regola di invio predefinita per le nuove liste</label><select id="s3">${S.meta.regole.map(r=>`<option value="${r}" ${s.regola_default===r?"selected":""}>${REG[r]}</option>`).join("")}</select>
+  <p><button class="btn" id="ss">Salva</button></p></div>`;
+  if(adm){const bk=document.createElement("div");bk.className="card";bk.style.maxWidth="620px";
+    bk.innerHTML=`<h3>Copia di sicurezza dei dati</h3><p class="small mut" style="margin-top:0">Scarica un file con tutti i dati (utenti, opportunità, campagne, proposte). Conservalo in un posto sicuro: contiene dati di clienti e password cifrate. Fai una copia ogni settimana e prima di ogni aggiornamento.</p><p><button class="btn" id="bkb">Scarica la copia</button></p>
+     <p class="small mut">Per ripristinarla: ferma il programma, sostituisci il file <code>hub.db</code> nella cartella <code>data</code> con la copia (rinominata hub.db) e riavvia.</p>`;
+    el.appendChild(bk);
+    $("#bkb",bk).onclick=async()=>{try{const r=await api("/backup",{raw:true});if(!r.ok)throw new Error("Download non riuscito ("+r.status+")");
+      const b=await r.blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=((r.headers.get("Content-Disposition")||"").match(/filename="([^"]+)"/)||[])[1]||"sicuritalia-backup.db";a.click();toast("Copia scaricata")}catch(e){toast(e.message,1)}}}
+  if(adm){const st=await api("/ai/stato").catch(()=>({attivo:false})),bx=document.createElement("div");bx.className="card";bx.style.maxWidth="620px";
+    const draw=st=>{bx.innerHTML=`<h3>Assistente AI (Anthropic)</h3>
+     <p class="small mut" style="margin-top:0">Con l'assistente AI gli agenti scrivono le richieste a parole loro («tutti i ristoranti della provincia di Gorizia») e il programma prepara la lista. Serve una chiave dell'account Anthropic (console.anthropic.com → API keys), a consumo: il costo dipende da quante richieste fanno gli agenti. Ogni utente può fare al massimo 40 richieste all'ora e 150 al giorno.</p>
+     <p>Stato: <b style="color:${st.attivo?"var(--ok)":"var(--warn)"}">${st.attivo?"attivo":"non attivo"}</b>${st.attivo?` <span class="small mut">(chiave ${st.finale||""} · ${st.fonte==="server"?"impostata sul server":"salvata qui"} · modello ${esc(st.modello)})</span>`:""}</p>
+     ${st.fonte==="server"?'<p class="small mut">La chiave è impostata come variabile del server (ANTHROPIC_API_KEY): per cambiarla modifica quella.</p>':`<label>${st.attivo?"Sostituisci la chiave":"Incolla la chiave"}</label><input id="aik" type="password" autocomplete="off" placeholder="sk-ant-…" style="width:100%">
+     <p class="row"><button class="btn" id="ais">Salva chiave</button>${st.attivo?'<button class="btn sec" id="aid">Rimuovi chiave</button>':""}</p>`}
+     ${st.attivo?'<p><button class="btn sec" id="aip">Prova il collegamento</button> <span class="small" id="aim"></span></p>':""}
+     <p class="small mut">Attenzione: se salvi la chiave qui, finisce anche nella copia di sicurezza dei dati: conserva quel file con cura. Sul servizio online è più sicuro impostarla come variabile ANTHROPIC_API_KEY. Se l'assistente non funziona, gli agenti usano comunque la ricerca semplice.</p>`;
+      if($("#ais",bx))$("#ais",bx).onclick=async()=>{try{draw(await api("/ai/chiave",{method:"PUT",json:{chiave:$("#aik",bx).value}}));toast("Chiave salvata")}catch(e){toast(e.message,1)}};
+      if($("#aid",bx))$("#aid",bx).onclick=async()=>{if(!confirm("Togliere la chiave? L'assistente AI verrà disattivato."))return;try{draw(await api("/ai/chiave",{method:"PUT",json:{chiave:""}}))}catch(e){toast(e.message,1)}};
+      if($("#aip",bx))$("#aip",bx).onclick=async()=>{const m=$("#aim",bx);m.textContent="Provo…";try{const r=await api("/ai/prova",{json:{}});m.style.color="var(--ok)";m.textContent="Funziona ✔ (modello "+r.modello+")"}catch(e){m.style.color="var(--ko)";m.textContent=e.message}}};
+    draw(st);el.appendChild(bx)}
+  if(adm){const gs=await api("/google/stato").catch(()=>({attivo:false})),gx=document.createElement("div");gx.className="card";gx.style.maxWidth="620px";
+    const gdraw=st=>{gx.innerHTML=`<h3>Google Places (ricerca prospect)</h3>
+     <p class="small mut" style="margin-top:0">Con la chiave Google la ricerca di attività usa Google Places al posto di OpenStreetMap: più telefoni e indirizzi aggiornati, nessuna attesa. Se Google non risponde il programma ripiega da solo su OpenStreetMap. La partita IVA non è fornita da Google. Costo a consumo: dopo le richieste gratuite del mese, circa 35 USD ogni 1.000 richieste con telefono e sito (verifica il listino su Google Cloud). Per limitare la spesa il programma blocca le ricerche dopo ${st.limite||300} richieste Google al giorno.</p>
+     <p>Stato: <b style="color:${st.attivo?"var(--ok)":"var(--warn)"}">${st.attivo?"attivo":"non attivo"}</b>${st.attivo?` <span class="small mut">(chiave ${st.finale||""} · ${st.fonte==="server"?"impostata sul server":"salvata qui"} · richieste oggi: ${st.oggi||0}/${st.limite})</span>`:""}</p>
+     ${st.fonte==="server"?'<p class="small mut">La chiave è impostata come variabile del server (GOOGLE_PLACES_KEY): per cambiarla modifica quella.</p>':`<label>${st.attivo?"Sostituisci la chiave":"Incolla la chiave"}</label><input id="gk" type="password" autocomplete="off" placeholder="AIza…" style="width:100%">
+     <p class="row"><button class="btn" id="gks">Salva chiave</button>${st.attivo?'<button class="btn sec" id="gkd">Rimuovi chiave</button>':""}</p>`}
+     ${st.attivo?'<p><button class="btn sec" id="gkp">Prova il collegamento</button> <span class="small" id="gkm"></span></p>':""}`;
+      if($("#gks",gx))$("#gks",gx).onclick=async()=>{try{gdraw(await api("/google/chiave",{method:"PUT",json:{chiave:$("#gk",gx).value}}));toast("Chiave Google salvata")}catch(e){toast(e.message,1)}};
+      if($("#gkd",gx))$("#gkd",gx).onclick=async()=>{if(!confirm("Togliere la chiave Google? La ricerca tornerà a usare OpenStreetMap."))return;try{gdraw(await api("/google/chiave",{method:"PUT",json:{chiave:""}}))}catch(e){toast(e.message,1)}};
+      if($("#gkp",gx))$("#gkp",gx).onclick=async()=>{const m=$("#gkm",gx);m.textContent="Provo…";try{await api("/google/prova",{json:{}});m.style.color="var(--ok)";m.textContent="Funziona ✔"}catch(e){m.style.color="var(--ko)";m.textContent=e.message}}};
+    gdraw(gs);el.appendChild(gx)}
+  const save=async j=>{try{await api("/settings",{method:"PUT",json:j});S.meta=await api("/meta");toast("Impostazioni salvate")}catch(e){toast(e.message,1)}};
+  $("#ss").onclick=()=>save({max_appuntamenti_giorno:$("#s2").value,regola_default:$("#s3").value});
+  if($("#sl"))$("#sl").onclick=()=>{const j={sla_ore:$("#sg").value};el.querySelectorAll("[data-sla]").forEach(i=>j["sla_"+i.dataset.sla]=i.value);save(j)};
+}
+window.addEventListener("offline",()=>toast("Sei offline: i dati non si aggiornano",1));
+window.addEventListener("online",()=>toast("Connessione ripristinata"));
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+}
+boot();
+</script>
+</body>
+</html>
