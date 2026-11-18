@@ -37,6 +37,7 @@ def a_capo(s, font, size, maxw):
 class Pagina:
     def __init__(self):
         self.ops = []
+        self.imgs = []      # (jpeg, larghezza px, altezza px)
 
     def _c(self, rgb):
         return "%.3f %.3f %.3f" % tuple(x / 255.0 for x in rgb)
@@ -61,6 +62,11 @@ class Pagina:
             x -= w
         self.ops.append(("BT %s rg /%s %.2f Tf %.2f %.2f Td" % (self._c(rgb), font, size, x, A4[1] - y), _esc(s)))
 
+    def img(self, x, y, w, h, jpeg, pw, ph):
+        """Immagine JPEG nel rettangolo con angolo in alto a sinistra (x, y), dall'alto della pagina."""
+        self.imgs.append((jpeg, pw, ph))
+        self.ops.append("q %.2f 0 0 %.2f %.2f %.2f cm /Im%d Do Q" % (w, h, x, A4[1] - y - h, len(self.imgs) - 1))
+
     def pdf(self):
         parts = []
         for op in self.ops:
@@ -75,6 +81,11 @@ class Pagina:
                 b"<< /Length %d /Filter /FlateDecode >>\nstream\n" % len(cont) + cont + b"\nendstream",
                 b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
                 b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"]
+        if self.imgs:
+            xo = " ".join("/Im%d %d 0 R" % (i, 7 + i) for i in range(len(self.imgs)))
+            objs[2] = ("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.4f %.4f] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> /XObject << %s >> >> /Contents 4 0 R >>" % (A4[0], A4[1], xo)).encode()
+            for jp, pw, ph in self.imgs:
+                objs.append(("<< /Type /XObject /Subtype /Image /Width %d /Height %d /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length %d >>\nstream\n" % (pw, ph, len(jp))).encode() + jp + b"\nendstream")
         out = bytearray(b"%PDF-1.4\n")
         offs = []
         for i, o in enumerate(objs, 1):

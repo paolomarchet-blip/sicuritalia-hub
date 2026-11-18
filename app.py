@@ -97,7 +97,7 @@ for _r in DEFAULTS:
         DEFAULTS[_r] |= {"messaggi", "documenti"}
 for _r in ("direttore", "area_manager", "district", "team_leader"):
     DEFAULTS[_r] |= {"messaggi_invia", "documenti_comuni"}
-for _r in ("direttore", "area_manager", "district", "team_leader", "agente"):
+for _r in ("direttore", "area_manager", "district", "team_leader", "agente", "recuperatore"):
     DEFAULTS[_r] |= {"preventivi"}
 
 STATI = ["da_gestire", "in_lavorazione", "preventivo", "appuntamento", "da_riprogrammare", "contratto", "ko"]
@@ -161,7 +161,7 @@ CREATE INDEX IF NOT EXISTS ix_files ON files(ambito, owner_id, area_id);
 CREATE TABLE IF NOT EXISTS preventivi(
   id INTEGER PRIMARY KEY, opp_id INTEGER NOT NULL, numero TEXT DEFAULT '', autore_id INTEGER, creato TEXT, data_richiesta TEXT,
   cliente TEXT, indirizzo TEXT DEFAULT '', email TEXT DEFAULT '', righe TEXT DEFAULT '[]', totale REAL DEFAULT 0,
-  inviato TEXT, inviato_a TEXT DEFAULT '');
+  inviato TEXT, inviato_a TEXT DEFAULT '', note TEXT DEFAULT '', materiale TEXT DEFAULT '[]');
 CREATE INDEX IF NOT EXISTS ix_prev_opp ON preventivi(opp_id);
 CREATE TABLE IF NOT EXISTS cb_staging(
   token TEXT PRIMARY KEY, area_id INTEGER, user_id INTEGER, dati TEXT, file TEXT DEFAULT '', quando TEXT);
@@ -278,7 +278,8 @@ def init_db():
         conn.execute("ALTER TABLE users ADD COLUMN cal_token TEXT")
     cols = [r[1] for r in conn.execute("PRAGMA table_info(opportunities)")]
     for nome, ddl in (("disdetta_esito", "TEXT"), ("disdetta_motivo", "TEXT"), ("valore", "REAL"), ("chiusa", "TEXT"),
-                      ("n_chiamate", "INTEGER DEFAULT 0"), ("canone", "REAL"), ("ultima_chiamata", "TEXT")):
+                      ("n_chiamate", "INTEGER DEFAULT 0"), ("canone", "REAL"), ("ultima_chiamata", "TEXT"),
+                      ("contratto_tipo", "TEXT"), ("canone_vecchio", "REAL"), ("canone_nuovo", "REAL")):
         if nome not in cols:
             conn.execute("ALTER TABLE opportunities ADD COLUMN %s %s" % (nome, ddl))
     # chiusure già esistenti: data di chiusura dallo storico; le disdette chiuse diventano recuperata / non recuperata
@@ -289,6 +290,11 @@ def init_db():
     conn.execute("CREATE INDEX IF NOT EXISTS ix_opp_comune ON opportunities(comune_id)")
     if "dup_info" not in cols:
         conn.execute("ALTER TABLE opportunities ADD COLUMN dup_info TEXT DEFAULT ''")
+    pcols = [r[1] for r in conn.execute("PRAGMA table_info(preventivi)")]
+    if pcols and "note" not in pcols:
+        conn.execute("ALTER TABLE preventivi ADD COLUMN note TEXT DEFAULT ''")
+    if pcols and "materiale" not in pcols:
+        conn.execute("ALTER TABLE preventivi ADD COLUMN materiale TEXT DEFAULT '[]'")
     if "con_preventivo" not in cols:
         conn.execute("ALTER TABLE opportunities ADD COLUMN con_preventivo INTEGER DEFAULT 0")
     for tab in ("opportunities", "proposals"):
@@ -691,6 +697,22 @@ def _valore(v):
     return round(x, 2) if 0 <= x < 1e9 else None
 
 
+def _valore_contratto(r):
+    """Valore che entra nei totali: prospect = nuovo canone; customer base = differenza positiva (nuovo - vecchio)."""
+    if r["stato"] != "contratto" or r["canone_nuovo"] is None or r["categoria"] == "disdetta":
+        return None
+    if r["categoria"] == "customer_base":
+        return round(max(0.0, r["canone_nuovo"] - (r["canone_vecchio"] or 0)), 2)
+    return round(r["canone_nuovo"], 2)
+
+
+VAL_SQL = ("CASE WHEN o.stato<>'contratto' OR o.canone_nuovo IS NULL THEN 0 WHEN c.categoria='customer_base' "
+           "THEN MAX(0, o.canone_nuovo-COALESCE(o.canone_vecchio,0)) WHEN c.categoria='prospect' THEN o.canone_nuovo ELSE 0 END")
+
+
+TIPI_CONTRATTO = {"modifica_canone": "Modifica canone", "trasformazione": "Trasformazione"}
+
+
 @app.post("/api/opportunities/<int:oid>/esito")
 @need("esiti")
 def api_esito(oid):
@@ -729,6 +751,28 @@ def api_esito(oid):
         return err("Per le disdette usa «Disdetta recuperata» o «Disdetta non recuperata»")
     if es not in ("contratto", "ko", "da_riprogrammare"):
         return err("Esito non valido")
+    if es == "contratto":
+        cb = o["categoria"] == "customer_base"
+        tipo = d.get("tipo") if cb else "nuovo"
+        if cb and tipo not in TIPI_CONTRATTO:
+            return err("Scegli se è una «Modifica canone» o una «Trasformazione»")
+        vec = None
+        if cb:
+            vec = _valore(d.get("valore_vecchio"))
+            if vec is None:
+                return err("Indica il valore del vecchio contratto (canone in euro)")
+        nuo = _valore(d.get("valore_nuovo"))
+        if nuo is None:
+            return err("Indica il valore del nuovo contratto (canone in euro)")
+        c.execute("UPDATE opportunities SET stato='contratto', esito_nota=?, contratto_tipo=?, canone_vecchio=?, canone_nuovo=?, "
+                  "chiusa=?, gestita=COALESCE(gestita,?) WHERE id=?", (nota, tipo, vec, nuo, ts(), ts(), oid))
+        if cb:
+            log_event(c, oid, u["id"], "contratto", "%s: vecchio canone %.2f €, nuovo canone %.2f € (differenza %+.2f €). %s"
+                      % (TIPI_CONTRATTO[tipo], vec, nuo, nuo - vec, nota))
+        else:
+            log_event(c, oid, u["id"], "contratto", "Nuovo contratto: canone %.2f €. %s" % (nuo, nota))
+        c.commit()
+        return jsonify({"ok": True})
     if es == "da_riprogrammare":
         c.execute("UPDATE opportunities SET stato='da_riprogrammare', appuntamento=NULL, esito_nota=?, "
                   "n_riprogrammazioni=n_riprogrammazioni+1, gestita=COALESCE(gestita,?) WHERE id=?", (nota, ts(), oid))
@@ -880,7 +924,7 @@ def _prev_dict(r, completo=False):
     righe = json.loads(r["righe"] or "[]")
     d = {"id": r["id"], "opp_id": r["opp_id"], "numero": r["numero"], "creato": r["creato"], "data_richiesta": r["data_richiesta"],
          "cliente": r["cliente"], "indirizzo": r["indirizzo"], "email": r["email"], "totale": r["totale"], "inviato": r["inviato"],
-         "inviato_a": r["inviato_a"], "servizi": [prev_mod.SERVIZI[x["servizio"]] for x in righe if x.get("servizio") in prev_mod.SERVIZI]}
+         "inviato_a": r["inviato_a"], "note": r["note"] or "", "n_materiale": len(json.loads(r["materiale"] or "[]")), "servizi": [prev_mod.SERVIZI[x["servizio"]] for x in righe if x.get("servizio") in prev_mod.SERVIZI]}
     if completo:
         d["righe"] = righe
     return d
@@ -900,6 +944,27 @@ def api_prev_servizi():
     return jsonify({"servizi": [{"id": k, "nome": v} for k, v in prev_mod.SERVIZI.items()], "tariffa_extra": prev_mod.TARIFFA_EXTRA})
 
 
+@app.get("/api/preventivi/listino")
+@need("preventivi")
+def api_prev_listino():
+    """Catalogo dei materiali (senza prezzi): codice, descrizione, e se è un kit il numero di componenti."""
+    L = prev_mod.listino()
+    if not L:
+        return err("Listino materiali non trovato sul server: manca il file assets/listino.json (e la cartella assets/listino_img). Copia la cartella «assets» del pacchetto aggiornato.", 500)
+    return jsonify([{"k": (x["c"] or x["n"]), "c": x["c"], "n": x["n"], "kit": len(x.get("k") or []), "i": x.get("i")} for x in L])
+
+
+@app.get("/api/preventivi/img/<int:i>.jpg")
+@need("preventivi")
+def api_prev_img(i):
+    f = os.path.join(prev_mod.IMG_DIR, "%d.jpg" % i)
+    if not os.path.isfile(f):
+        abort(404)
+    r = send_file(f, mimetype="image/jpeg")
+    r.headers["Cache-Control"] = "private, max-age=86400"
+    return r
+
+
 @app.get("/api/opportunities/<int:oid>/preventivi")
 @need("preventivi")
 def api_prev_lista(oid):
@@ -914,8 +979,6 @@ def api_prev_crea(oid):
     o = load_opp(oid, u)
     c = db()
     d = body()
-    if o["categoria"] == "disdetta":
-        return err("Per le disdette non si fa il preventivo")
     if o["stato"] in ("contratto", "ko"):
         return err("Opportunità già chiusa")
     righe = d.get("righe")
@@ -939,9 +1002,13 @@ def api_prev_crea(oid):
         return err("Manca il nome del cliente")
     ind = (d.get("indirizzo") or "").strip()[:300]
     email = (d.get("email") or "").strip()[:150]
+    note = (d.get("note") or "").strip()[:1500]
+    materiale, e = prev_mod.valida_materiale(d.get("materiale"))
+    if e:
+        return err(e)
     tot = round(sum(x["canone"] for x in pulite), 2)
-    cur = c.execute("INSERT INTO preventivi(opp_id,autore_id,creato,data_richiesta,cliente,indirizzo,email,righe,totale) VALUES(?,?,?,?,?,?,?,?,?)",
-                    (oid, u["id"], ts(), data, cliente, ind, email, json.dumps(pulite), tot))
+    cur = c.execute("INSERT INTO preventivi(opp_id,autore_id,creato,data_richiesta,cliente,indirizzo,email,righe,totale,note,materiale) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                    (oid, u["id"], ts(), data, cliente, ind, email, json.dumps(pulite), tot, note, json.dumps(materiale, ensure_ascii=False)))
     pid = cur.lastrowid
     num = "P%s-%04d" % (now().year, pid)
     c.execute("UPDATE preventivi SET numero=? WHERE id=?", (num, pid))
@@ -956,7 +1023,7 @@ def api_prev_crea(oid):
 def api_prev_pdf(pid):
     r = _load_prev(pid, current_user())
     righe = json.loads(r["righe"] or "[]")
-    pdf = prev_mod.genera_pdf({"cliente": r["cliente"], "indirizzo": r["indirizzo"], "data_richiesta": r["data_richiesta"], "righe": righe})
+    pdf = prev_mod.genera_pdf({"cliente": r["cliente"], "indirizzo": r["indirizzo"], "data_richiesta": r["data_richiesta"], "righe": righe, "note": r["note"], "materiale": json.loads(r["materiale"] or "[]")})
     nome = re.sub(r"[^A-Za-z0-9]+", "_", r["cliente"]).strip("_")[:40] or "cliente"
     return send_file(io.BytesIO(pdf), mimetype="application/pdf", as_attachment=not request.args.get("inline"),
                      download_name="Preventivo_%s_%s.pdf" % (r["numero"], nome))
@@ -1135,6 +1202,7 @@ def dash_filters(u):
     if camp:
         where += " AND o.campaign_id IN (%s)" % ",".join("?" * len(camp))
         ps += camp
+    where_nd, ps_nd = where, list(ps)
     dal, al = _data_arg("dal"), _data_arg("al")
     if dal and al and dal > al:
         dal, al = al, dal
@@ -1144,7 +1212,7 @@ def dash_filters(u):
     if al:
         where += " AND substr(COALESCE(o.creata,o.assegnata),1,10)<=?"
         ps.append(al)
-    return where, ps, {"area_id": area_id, "agenti": sub, "dal": dal, "al": al}
+    return where, ps, {"area_id": area_id, "agenti": sub, "dal": dal, "al": al, "where_nd": where_nd, "ps_nd": ps_nd}
 
 
 @app.get("/api/dashboard")
@@ -1165,6 +1233,24 @@ def api_dashboard():
     chiuse = kpi["contratti"] + kpi["ko"]
     kpi["conversione"] = round(100 * kpi["contratti"] / chiuse, 1) if chiuse else None
 
+    kpi["valore_totale"] = round(c.execute("SELECT COALESCE(SUM(" + VAL_SQL + "),0) FROM opportunities o LEFT JOIN campaigns c "
+                                           "ON c.id=o.campaign_id WHERE " + where, ps).fetchone()[0], 2)
+    mese = now().strftime("%Y-%m")
+    mrow = c.execute(
+        "SELECT c.categoria cat, o.contratto_tipo tipo, COUNT(*) n, COALESCE(SUM(o.canone_vecchio),0) vecchio, "
+        "COALESCE(SUM(o.canone_nuovo),0) nuovo, COALESCE(SUM(" + VAL_SQL + "),0) valore "
+        "FROM opportunities o LEFT JOIN campaigns c ON c.id=o.campaign_id WHERE " + fl["where_nd"] +
+        " AND o.stato='contratto' AND o.canone_nuovo IS NOT NULL AND c.categoria<>'disdetta' AND substr(o.chiusa,1,7)=? "
+        "GROUP BY c.categoria, o.contratto_tipo", fl["ps_nd"] + [mese]).fetchall()
+    rip = {"mese": mese, "totale": 0.0, "contratti": 0, "righe": []}
+    for r in mrow:
+        rip["righe"].append({"categoria": r["cat"], "tipo": r["tipo"], "contratti": r["n"], "vecchio": round(r["vecchio"], 2),
+                             "nuovo": round(r["nuovo"], 2), "valore": round(r["valore"], 2)})
+        rip["totale"] += r["valore"]
+        rip["contratti"] += r["n"]
+    rip["totale"] = round(rip["totale"], 2)
+    kpi["mese"] = rip
+
     fine = datetime.strptime(fl["al"], "%Y-%m-%d").date() if fl["al"] else now().date()
     if fl["dal"]:
         inizio = max(datetime.strptime(fl["dal"], "%Y-%m-%d").date(), fine - timedelta(days=91))
@@ -1183,12 +1269,12 @@ def api_dashboard():
 
     cat = c.execute(
         "SELECT c.categoria, COUNT(*) totale, SUM(o.stato='da_gestire') da_gestire, SUM(o.stato='contratto') contratti, "
-        "SUM(o.stato='ko') ko FROM opportunities o LEFT JOIN campaigns c ON c.id=o.campaign_id WHERE " + where +
+        "SUM(o.stato='ko') ko, SUM(" + VAL_SQL + ") valore FROM opportunities o LEFT JOIN campaigns c ON c.id=o.campaign_id WHERE " + where +
         " GROUP BY c.categoria", ps).fetchall()
     team = c.execute(
         "SELECT a.id, a.nome, a.ruolo, p.nome AS riferimento, COUNT(o.id) assegnate, SUM(o.stato='da_gestire') da_gestire, "
         "SUM(o.stato<>'da_gestire') gestite, SUM(o.stato='contratto') contratti, SUM(o.stato='ko') ko, "
-        "SUM(o.stato='da_gestire' AND o.scadenza IS NOT NULL AND o.scadenza<?) scadute "
+        "SUM(o.stato='da_gestire' AND o.scadenza IS NOT NULL AND o.scadenza<?) scadute, SUM(" + VAL_SQL + ") valore "
         "FROM opportunities o JOIN users a ON a.id=o.agente_id LEFT JOIN users p ON p.id=a.parent_id "
         "LEFT JOIN campaigns c ON c.id=o.campaign_id WHERE " + where + " GROUP BY a.id ORDER BY a.nome", [n] + ps).fetchall()
     w2, p2 = scope_where(u, None, fl["area_id"])
@@ -2331,11 +2417,12 @@ def api_settings_put():
 @app.get("/api/backup")
 @need("impostazioni")
 def api_backup():
-    """Copia completa dei dati (solo amministratore): file .db scaricabile."""
+    """Copia completa dei dati (solo amministratore): file .zip con il database e gli allegati."""
     u = current_user()
     if u["ruolo"] != "admin":
         abort(403)
     import tempfile
+    import zipfile
     fd, tmp = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     src = connect()
@@ -2345,17 +2432,104 @@ def api_backup():
     finally:
         dst.close()
         src.close()
-    with open(tmp, "rb") as f:
-        data = f.read()
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.write(tmp, "hub.db")
+        if os.path.isdir(UPLOAD_DIR):
+            for rad, _dirs, files in os.walk(UPLOAD_DIR):
+                for f in files:
+                    full = os.path.join(rad, f)
+                    z.write(full, "allegati/" + os.path.relpath(full, UPLOAD_DIR).replace(os.sep, "/"))
     try:
         os.remove(tmp)
     except OSError:
         pass
-    nome = "sicuritalia-backup-%s.db" % now().strftime("%Y%m%d-%H%M")
-    resp = app.response_class(data, mimetype="application/octet-stream")
+    nome = "sicuritalia-backup-%s.zip" % now().strftime("%Y%m%d-%H%M")
+    resp = app.response_class(buf.getvalue(), mimetype="application/zip")
     resp.headers["Content-Disposition"] = 'attachment; filename="%s"' % nome
     resp.headers["Cache-Control"] = "no-store"
     return resp
+
+
+@app.post("/api/backup/ripristina")
+@need("impostazioni")
+def api_backup_ripristina():
+    """Ripristina i dati da una copia (.zip o .db) scaricata da questo programma o dalla versione sul PC. Solo amministratore.
+    Prima di sostituire i dati correnti ne salva una copia di sicurezza nella cartella dei dati."""
+    u = current_user()
+    if u["ruolo"] != "admin":
+        abort(403)
+    import shutil
+    import tempfile
+    import zipfile
+    f = request.files.get("file")
+    if not f or not f.filename:
+        return err("Scegli il file di backup (.zip o .db)")
+    if request.form.get("conferma") != "1":
+        return err("Conferma il ripristino")
+    tmpd = tempfile.mkdtemp(prefix="soh-rip-")
+    try:
+        raw = os.path.join(tmpd, "upload")
+        f.save(raw)
+        newdb = os.path.join(tmpd, "hub.db")
+        staging = os.path.join(tmpd, "allegati")
+        con_allegati = False
+        if zipfile.is_zipfile(raw):
+            with zipfile.ZipFile(raw) as z:
+                nomi = z.namelist()
+                if "hub.db" not in nomi:
+                    return err("Il file .zip non contiene il database (hub.db): non è una copia di questo programma")
+                with z.open("hub.db") as a, open(newdb, "wb") as b:
+                    shutil.copyfileobj(a, b)
+                for n in nomi:
+                    if not n.startswith("allegati/") or n.endswith("/"):
+                        continue
+                    rel = os.path.normpath(n[len("allegati/"):])
+                    if rel.startswith("..") or os.path.isabs(rel):
+                        return err("File non valido nel backup")
+                    dest = os.path.join(staging, rel)
+                    os.makedirs(os.path.dirname(dest), exist_ok=True)
+                    with z.open(n) as a, open(dest, "wb") as b:
+                        shutil.copyfileobj(a, b)
+                    con_allegati = True
+        else:
+            os.replace(raw, newdb)
+        # il file deve essere un database di questo programma
+        try:
+            chk = sqlite3.connect(newdb)
+            ok = chk.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+            tab = {r[0] for r in chk.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            nut = chk.execute("SELECT COUNT(*) FROM users").fetchone()[0] if "users" in tab else 0
+            chk.close()
+        except sqlite3.Error:
+            return err("Il file non è un database valido")
+        if not ok or not {"users", "opportunities"} <= tab or nut == 0:
+            return err("Il file non è una copia valida di Sales Opportunity Hub")
+        # copia di sicurezza dei dati attuali
+        db().commit()
+        g.pop("db", None)
+        prima = os.path.join(DATA_DIR, "prima-ripristino-%s.db" % now().strftime("%Y%m%d-%H%M%S"))
+        a, b = connect(), sqlite3.connect(prima)
+        try:
+            a.backup(b)
+        finally:
+            b.close()
+            a.close()
+        # sostituzione dei dati: la copia viene scritta dentro il database in uso
+        s_, d_ = sqlite3.connect(newdb), sqlite3.connect(DB_PATH, timeout=60)
+        try:
+            s_.backup(d_)
+        finally:
+            d_.close()
+            s_.close()
+        if con_allegati:
+            shutil.rmtree(UPLOAD_DIR, ignore_errors=True)
+            shutil.copytree(staging, UPLOAD_DIR)
+        init_db()                                   # aggiorna le copie fatte con versioni più vecchie del programma
+        session.clear()
+        return jsonify({"ok": True, "utenti": nut, "allegati": con_allegati, "copia_precedente": os.path.basename(prima)})
+    finally:
+        shutil.rmtree(tmpd, ignore_errors=True)
 
 
 @app.get("/api/export.xlsx")
@@ -2369,12 +2543,15 @@ def api_export():
     ws.title = "Rendicontazione"
     ws.append(["ID", "Campagna", "Categoria", "Tipo", "Cliente", "Telefono", "Località", "Area", "Agente", "Stato",
                "Note esito", "Assegnata", "Scadenza SLA", "Prima gestione", "Appuntamento", "Riprogrammazioni",
-               "Esito disdetta", "Motivo non recuperata", "Canone originario", "Valore recuperato", "Chiusa il", "Chiamate"])
+               "Esito disdetta", "Motivo non recuperata", "Canone originario", "Valore recuperato", "Chiusa il", "Chiamate",
+               "Tipo contratto", "Vecchio canone", "Nuovo canone", "Valore contratto"])
     for r in rows:
         ws.append([r["id"], r["campagna"], r["categoria"], r["sottotipo"], r["cliente"], r["telefono"], r["localita"],
                    r["area"], r["agente"], r["stato"], r["esito_nota"], r["assegnata"], r["scadenza"], r["gestita"],
                    r["appuntamento"], r["n_riprogrammazioni"], r["disdetta_esito"] or "",
-                   MOTIVI_NON_REC.get(r["disdetta_motivo"], ""), r["canone"], r["valore"], r["chiusa"], r["n_chiamate"] or 0])
+                   MOTIVI_NON_REC.get(r["disdetta_motivo"], ""), r["canone"], r["valore"], r["chiusa"], r["n_chiamate"] or 0,
+                   TIPI_CONTRATTO.get(r["contratto_tipo"], "Nuovo contratto" if r["contratto_tipo"] == "nuovo" else ""),
+                   r["canone_vecchio"], r["canone_nuovo"], _valore_contratto(r)])
     for row in ws.iter_rows(min_row=2):  # i testi importati che iniziano con "=" restano testo (no formule in Excel)
         for cell in row:
             if isinstance(cell.value, str) and cell.value[:1] == "=":

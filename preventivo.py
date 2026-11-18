@@ -2,12 +2,14 @@
 """Preventivo Sicuritalia: dati dei servizi quotati e generazione del PDF nel formato dell'«Offerta tipo».
 Le pagine fisse (copertina, presentazione, referenze, certificazioni, condizioni generali) sono in assets/offerta_base.pdf;
 qui si compilano l'intestazione («Spett.le», data) e le tabelle dell'offerta economica, poi si rinumerano le pagine."""
+import base64
 import io
+import json
 import os
 import re
 from datetime import datetime
 
-from pypdf import PdfReader, PdfWriter
+from pypdf import PageObject, PdfReader, PdfWriter
 
 import pdfmini as pm
 
@@ -152,7 +154,7 @@ X0, X1, C1, C2 = 57.0, 538.7, 149.5, 408.0
 F_BODY, LH = 8.7, 11.6
 
 
-def _pagine_economiche(righe):
+def _pagine_economiche(righe, note=""):
     pagine = []
     pg = None
     y = 0
@@ -203,6 +205,169 @@ def _pagine_economiche(righe):
         # canone
         pg.testo((C2 + X1) / 2, y + h / 2 + 3, "%s + IVA" % fmt_euro(r["canone"]), "F1", 9.4, (0, 0, 0), "c")
         y += h + 16
+    note = (note or "").strip()
+    if note:
+        righe_n = []
+        for par in note.replace("\r", "").split("\n"):
+            righe_n += pm.a_capo(par, "F1", F_BODY, X1 - X0 - 16) if par.strip() else [""]
+        h = 24 + len(righe_n) * LH
+        if y + h > 780 and y > 150:
+            pagine.append(pg)
+            pg, y = nuova(False)
+        pg.rett(X0, y, X1 - X0, 18, fill=GRIGIO)
+        pg.testo(X0 + 8, y + 12.5, "NOTE", "F2", 9.6, NAVY)
+        pg.rett(X0, y + 18, X1 - X0, h - 18, stroke=BORDO)
+        ty = y + 18 + 14
+        for ln in righe_n:
+            if ln:
+                pg.testo(X0 + 8, ty, ln, "F1", F_BODY)
+            ty += LH
+        y += h + 10
+    pagine.append(pg)
+    return pagine
+
+
+# ------------------------------------------------------------------ listino materiali (allegato «Elenco materiale»)
+LISTINO_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "listino.json")
+_LISTINO = None
+IMG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "listino_img")
+
+
+def listino():
+    """[{c: codice, n: descrizione, k: [{q, c, n}] (solo i kit)}], dal file assets/listino.json."""
+    global _LISTINO
+    if not _LISTINO:                      # se manca il file non si memorizza il vuoto: ricarica appena viene copiato
+        try:
+            _LISTINO = json.load(open(LISTINO_FILE, encoding="utf-8"))
+        except (OSError, ValueError):
+            _LISTINO = []
+    return _LISTINO
+
+
+def _jpeg_size(b):
+    """(larghezza, altezza) di un JPEG, leggendo il marcatore SOF (senza librerie esterne)."""
+    i = 2
+    while i + 9 < len(b):
+        if b[i] != 0xFF:
+            i += 1
+            continue
+        mk = b[i + 1]
+        if mk in (0xC0, 0xC1, 0xC2):
+            return (b[i + 7] << 8) | b[i + 8], (b[i + 5] << 8) | b[i + 6]
+        if mk in (0xD8, 0x01) or 0xD0 <= mk <= 0xD7:
+            i += 2
+        else:
+            i += 2 + ((b[i + 2] << 8) | b[i + 3])
+    raise ValueError("JPEG non valido")
+
+
+def valida_materiale(m):
+    """m: lista di {chiave, qta}. Tiene solo le quantità > 0 e copia nome/composizione (così il preventivo non cambia se il listino cambia).
+    Ritorna (lista, errore)."""
+    if m in (None, ""):
+        return [], None
+    if not isinstance(m, list):
+        return [], "Elenco materiale non valido"
+    per_chiave = {(x["c"] or x["n"]): x for x in listino()}
+    out, visti = [], set()
+    for r in m:
+        if not isinstance(r, dict):
+            return [], "Elenco materiale non valido"
+        ch = str(r.get("chiave") or "")
+        a = per_chiave.get(ch)
+        if a is None:
+            return [], "Articolo non presente nel listino"
+        try:
+            q = int(float(str(r.get("qta") or 0).replace(",", ".")))
+        except ValueError:
+            return [], "Quantità non valida per «%s»" % a["n"]
+        if q < 0 or q > 9999:
+            return [], "Quantità non valida per «%s»" % a["n"]
+        if q == 0 or ch in visti:
+            continue
+        visti.add(ch)
+        e = {"chiave": ch, "c": a["c"], "n": a["n"], "qta": q}
+        if a.get("k"):
+            e["k"] = a["k"]
+        if a.get("i") is not None:
+            try:
+                e["img"] = base64.b64encode(open(os.path.join(IMG_DIR, "%d.jpg" % a["i"]), "rb").read()).decode()
+            except OSError:
+                pass
+        out.append(e)
+    if len(out) > 150:
+        return [], "Troppi articoli nell'elenco materiale (massimo 150)"
+    return out, None
+
+
+def _pagine_materiale(materiale, cliente, data_iso):
+    """Pagine dell'allegato «Elenco materiale»: codice, descrizione e quantità (per i kit anche la composizione)."""
+    pagine = []
+    CW, FW, QW = 74.0, 46.0, 52.0             # larghezze colonne codice, foto e quantità
+    XF = X0 + CW
+    XC, XQ = XF + FW, X1 - QW
+
+    def nuova(prima):
+        p = pm.Pagina()
+        p.rett(54, 68, 492, 60, fill=(255, 255, 255))
+        p.rett(X0, 74, X1 - X0, 34, fill=NAVY)
+        p.testo((X0 + X1) / 2, 88, "ALLEGATO - ELENCO MATERIALE DELL'IMPIANTO", "F2", 10.2, (255, 255, 255), "c")
+        p.testo((X0 + X1) / 2, 100, "(l'elenco comprende solo i materiali con quantità maggiore di zero)", "F1", 7.4, (255, 255, 255), "c")
+        y = 122.0
+        if prima:
+            p.testo(X0, y + 8, "Cliente: %s" % (cliente or ""), "F2", 9)
+            p.testo(X1, y + 8, "Data: %s" % _data_it(data_iso), "F1", 9, (0, 0, 0), "r")
+            y += 22
+        return p, y
+
+    def intest(p, y):
+        p.rett(X0, y, X1 - X0, 20, fill=GRIGIO)
+        p.linea(XF, y, XF, y + 20, BORDO)
+        p.linea(XC, y, XC, y + 20, BORDO)
+        p.linea(XQ, y, XQ, y + 20, BORDO)
+        p.testo(X0 + CW / 2, y + 13.5, "CODICE", "F2", 9, NAVY, "c")
+        p.testo((XF + XC) / 2, y + 13.5, "FOTO", "F2", 9, NAVY, "c")
+        p.testo((XC + XQ) / 2, y + 13.5, "DESCRIZIONE", "F2", 9, NAVY, "c")
+        p.testo((XQ + X1) / 2, y + 13.5, "Q.TÀ", "F2", 9, NAVY, "c")
+        return y + 20
+
+    pg, y = nuova(True)
+    y = intest(pg, y)
+    for a in materiale:
+        nome = pm.a_capo(a["n"], "F2", 8.4, XQ - XC - 14)
+        sub = []
+        for k in a.get("k") or []:
+            t = "%d x %s%s" % (k["q"] * a["qta"], (k["c"] + "  ") if k.get("c") else "", k["n"])
+            sub += pm.a_capo(t, "F1", 7.4, XQ - XC - 30)
+        h = max(9 + len(nome) * 10.4 + (len(sub) * 9.2 + 3 if sub else 0), 44 if a.get("img") else 0)
+        if y + h > 790:
+            pagine.append(pg)
+            pg, y = nuova(False)
+            y = intest(pg, y)
+        pg.rett(X0, y, X1 - X0, h, stroke=BORDO)
+        pg.linea(XF, y, XF, y + h, BORDO)
+        pg.linea(XC, y, XC, y + h, BORDO)
+        pg.linea(XQ, y, XQ, y + h, BORDO)
+        pg.testo(X0 + CW / 2, y + 13, a["c"] or "-", "F1", 8.2, (0, 0, 0), "c")
+        if a.get("img"):
+            try:
+                jp = base64.b64decode(a["img"])
+                pw, ph = _jpeg_size(jp)
+                sc = min((FW - 8) / pw, (h - 8) / ph, 2.0)
+                iw, ih = pw * sc, ph * sc
+                pg.img(XF + (FW - iw) / 2, y + (h - ih) / 2, iw, ih, jp, pw, ph)
+            except Exception:
+                pass
+        ty = y + 13
+        for ln in nome:
+            pg.testo(XC + 7, ty, ln, "F2", 8.4, NAVY)
+            ty += 10.4
+        ty -= 1
+        for ln in sub:
+            pg.testo(XC + 18, ty + 3, ln, "F1", 7.4, (70, 70, 70))
+            ty += 9.2
+        pg.testo((XQ + X1) / 2, y + 13, str(a["qta"]), "F2", 10, (0, 0, 0), "c")
+        y += h
     pagine.append(pg)
     return pagine
 
@@ -226,15 +391,22 @@ def genera_pdf(p):
     unico = PdfReader(io.BytesIO(base))
 
     def pagina(i, ov=None):
-        # le pagine usate una volta sola condividono il lettore (le immagini restano un solo oggetto); la pagina 7 si ripete
-        pg = (PdfReader(io.BytesIO(base)) if i == 7 else unico).pages[i]
+        # tutte le pagine condividono lo stesso lettore: le immagini restano un solo oggetto anche se la pagina 7 si ripete
+        if i == 7:       # la pagina-modello si ripete: ogni copia è una pagina nuova che ne importa il contenuto (risorse condivise)
+            src = unico.pages[7]
+            pg = PageObject.create_blank_page(w, src.mediabox.width, src.mediabox.height)
+            pg.merge_page(src)
+            w.add_page(pg)
+            pg = w.pages[-1]
+        else:
+            pg = w.add_page(unico.pages[i])
         if ov is not None:
             pg.merge_page(PdfReader(io.BytesIO(ov.pdf())).pages[0])
         return pg
-    eco = _pagine_economiche(p["righe"])
+    eco = _pagine_economiche(p["righe"], p.get("note"))
     k = len(eco)
     w = PdfWriter()
-    w.add_page(pagina(0))
+    pagina(0)
     # lettera: Spett.le + data
     ov = pm.Pagina()
     ov.rett(272, 66, 52, 20, fill=(255, 255, 255))          # «INDICE» (qui fuori posto: va sulla pagina dell'indice)
@@ -249,7 +421,7 @@ def genera_pdf(p):
         ov.testo(305, y, ln, "F1", 9.5)
         y += 11
     ov.testo(56.8, 266, "%s, li %s" % (LUOGO, _data_it(p.get("data_richiesta"))), "F1", 10)
-    w.add_page(pagina(1, ov))
+    pagina(1, ov)
     # indice
     ov = pm.Pagina()
     ov.testo(297.7, 82, "INDICE", "F2", 10, NAVY, "c")
@@ -257,16 +429,21 @@ def genera_pdf(p):
     ov.testo(544.4, 229.3, "7", "F1", 10, NAVY, "r")
     ov.rett(536, 231, 12, 16, fill=(255, 255, 255))
     ov.testo(544.4, 242.6, str(7 + k), "F1", 10, NAVY, "r")
-    w.add_page(pagina(2, ov))
+    pagina(2, ov)
     for i in (3, 4, 5, 6):
-        w.add_page(pagina(i))
+        pagina(i)
     for j, e in enumerate(eco):
         _num(e, 7 + j)
-        w.add_page(pagina(7, e))
+        pagina(7, e)
     for j, i in enumerate((8, 9)):
         ov = pm.Pagina()
         _num(ov, 7 + k + j)
-        w.add_page(pagina(i, ov))
+        pagina(i, ov)
+    mat = p.get("materiale") or []
+    if mat:
+        for j, e in enumerate(_pagine_materiale(mat, p.get("cliente"), p.get("data_richiesta"))):
+            _num(e, 9 + k + j)
+            pagina(7, e)
     w.add_metadata({"/Title": "Proposta tecnico-economica - %s" % (p.get("cliente") or ""), "/Author": "Sicuritalia"})
     out = io.BytesIO()
     w.write(out)

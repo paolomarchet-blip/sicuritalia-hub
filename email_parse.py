@@ -122,7 +122,14 @@ def _block(text, header, stop_re):
 
 
 def _title(s):
-    return " ".join(w.capitalize() if w.isupper() and len(w) > 3 else w for w in (s or "").split())
+    PICCOLE = {"DEL", "DI", "DA", "DAL", "DEI", "DELLA", "DELLE", "DEGLI", "DELL", "NEL", "SUL", "IN", "E", "AL", "ALLA"}
+    out = []
+    for i, w in enumerate((s or "").split()):
+        if w.isupper() and w in PICCOLE and i > 0:
+            out.append(w.lower())
+        else:
+            out.append(w.capitalize() if w.isupper() and len(w) > 3 else w)
+    return " ".join(out)
 
 
 def detect(text):
@@ -130,6 +137,9 @@ def detect(text):
     subj = re.search(r"(?im)^\s*Oggetto\s*:\s*(.+)$", text)
     s = subj.group(1) if subj else head.split("\n")[0]
     if re.search(r"(?i)\bdisdett", s) or re.search(r"(?i)data di cessazione desiderata", text):
+        return "disdetta", s
+    # testo incollato senza la riga «Oggetto»: si riconosce dal corpo della mail
+    if re.search(r"(?i)recupero (della )?disdetta|disdetta (immediata|con cliente)|Data (spedizione|ricezione) disdetta|Canone mensile originale|Agente Gestore\s*:", head + text[-800:]):
         return "disdetta", s
     if re.search(r"(?i)\bLEAD\b", s) or re.search(r"(?i)INDIRIZZO APPUNTAMENTO|NOMINATIVO\s*-\s*TELEFONO", text):
         return "lead", s
@@ -248,5 +258,5 @@ def parse(text):
     else:
         out = {"tipo": "", "cliente": "", "telefono": (_phones(text) or [""])[0], "localita": "", "provincia": "", "indirizzo": "",
                "rif_esterno": "", "note": text[:1500]}
-    out["oggetto"] = subj.strip()
+    out["oggetto"] = subj.strip() if re.search(r"(?im)^\s*Oggetto\s*:", text) else ""
     return out

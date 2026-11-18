@@ -196,3 +196,19 @@ Insieme al programma trovi le guide illustrate per ruolo (PDF) e il video di pre
 - L'opportunità passa allo stato **Preventivo inviato**. Poi l'agente fissa l'appuntamento per la verifica con il cliente e registra l'esito (contratto, KO, da riprogrammare).
 - **Invio:** dal telefono si apre la scelta dell'app (mail, WhatsApp…) con il PDF già allegato; dal PC il PDF viene scaricato e si apre la mail già scritta, da completare allegando il file. Il programma non invia mail da solo (non ha un server di posta).
 - Permesso «Fare preventivi ai clienti»: attivo per agenti, team leader, district, area manager e direttore; si cambia per singolo utente.
+
+### Preventivi: aggiornamento (v3.19)
+- Il **Recuperatore disdette** può fare preventivi (anche sulle disdette, per proporre una nuova offerta al cliente); l'esito resta «Disdetta recuperata / non recuperata».
+- Nuovo campo **Note** dopo l'elenco dei servizi: compare nel PDF in un riquadro «NOTE» sotto la tabella dell'offerta.
+- **Elenco materiale (v3.20):** nella maschera del preventivo, sotto i servizi, si scelgono dal listino (assets/listino.json e foto in assets/listino_img, 198 articoli senza prezzi, ricavato dal file Excel «LISTINO TECNOLOGIE») gli articoli scrivendo solo il numero dei pezzi. Nel PDF, in fondo, compare l'«Allegato - Elenco materiale dell'impianto» con i soli articoli a quantità > 0 (per i kit anche i componenti). Per aggiornare il listino: `python3 listino_to_json.py LISTINO.xlsx assets/listino.json assets/listino_img` (rigenera anche le foto, prese dalla colonna «Immagine prodotto»; serve openpyxl e Pillow) (script incluso nello zip).
+
+### Copia e ripristino dei dati dal programma (v3.21)
+- **Impostazioni → Copia di sicurezza → «Scarica la copia (.zip)»** (solo amministratore): file con database e allegati.
+- **Impostazioni → «Ripristina da una copia»** (solo amministratore): carica un .zip (o un vecchio .db) e sostituisce i dati correnti. Prima salva `prima-ripristino-AAAAMMGG-hhmmss.db` nella cartella dei dati. Dopo il ripristino si rifà l'accesso con un utente della copia.
+- Uso tipico: scaricare la copia dal programma sul PC e caricarla sul programma online (Render, ecc.). Limite di caricamento: 70 MB.
+
+### Valori del contratto e riepilogo del mese (v3.22)
+- **Diventa contratto** apre il riquadro «Dati del contratto». **Prospect/lead**: si inserisce il valore del nuovo contratto (canone). **Customer base**: si sceglie *Modifica canone* o *Trasformazione* e si inseriscono valore del vecchio e del nuovo contratto. Valori obbligatori.
+- **Dashboard**: riquadro «Riepilogo del mese solare» = somma dei nuovi canoni dei prospect + differenza positiva (nuovo − vecchio) sulla customer base, per i contratti chiusi nel mese; dettaglio per tipo, colonna «Valore» in «Per categoria» e «Team», tile «Valore contratti (periodo)» e, dall'elenco «Contratti», vecchio/nuovo canone di ogni opportunità.
+- Export Excel: colonne Tipo contratto, Vecchio canone, Nuovo canone, Valore contratto. Le disdette non cambiano. I contratti chiusi prima di v3.22 non hanno valori e contano 0.
+- **Stampa resoconto mensile (v3.22):** pulsante «🖨 Stampa resoconto» nel riquadro del mese in dashboard: apre la stampa con totale e dettaglio per tipo (rispetta i filtri scelti).
